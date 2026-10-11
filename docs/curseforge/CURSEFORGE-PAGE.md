@@ -1,4 +1,4 @@
-![Music Reforged — made by hash014](https://raw.githubusercontent.com/hashk014/Music-Reforged/codex/music-reforged/docs/curseforge/media/banner.png)
+![Music Reforged — made by hash014](https://raw.githubusercontent.com/hashk014/Music-Reforged/06029f0df4e2a8b86c6cc96fd6d315a37b1363f1/docs/curseforge/media/banner.png)
 
 # Music Reforged
 
@@ -36,11 +36,11 @@ Run `/music admin` to receive a clickable administration link valid for 30 minut
 The interface is in English and includes the audio library, import progress,
 playlists, zones, event triggers and custom discs.
 
-![Actual administration interface: completed audio import](https://raw.githubusercontent.com/hashk014/Music-Reforged/codex/music-reforged/docs/curseforge/media/admin-library.jpg)
+![Actual administration interface: completed audio import](https://raw.githubusercontent.com/hashk014/Music-Reforged/06029f0df4e2a8b86c6cc96fd6d315a37b1363f1/docs/curseforge/media/admin-library.jpg)
 
 *Actual plugin interface: an audio import completed and its resource pack generated.*
 
-![Actual playlist editor](https://raw.githubusercontent.com/hashk014/Music-Reforged/codex/music-reforged/docs/curseforge/media/admin-playlists.jpg)
+![Actual playlist editor](https://raw.githubusercontent.com/hashk014/Music-Reforged/06029f0df4e2a8b86c6cc96fd6d315a37b1363f1/docs/curseforge/media/admin-playlists.jpg)
 
 *Actual plugin interface: playlist order, shuffle, playback controls and the personal radio command.*
 

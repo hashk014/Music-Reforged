@@ -38,7 +38,8 @@ screenshots. These assets do not claim to be in-game gameplay screenshots.
 
 Upload the logo in the project's Logo field and the other images through the
 project's Images area. The Markdown description uses publicly accessible image
-URLs from this repository. You may replace them with CurseForge-hosted image
+URLs pinned to the media commit in this repository. They do not depend on the
+feature branch remaining open. You may replace them with CurseForge-hosted image
 URLs after uploading to keep the published page independent of GitHub.
 
 The square PNG meets CurseForge's documented minimum of 400 × 400 pixels;
