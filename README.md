@@ -4,6 +4,63 @@ Réécriture du plugin Music de Zombie_Striker : radios, playlists, jukeboxes,
 audio personnalisé et génération autonome du pack. Plugin serveur Bukkit/Spigot/Paper.
 Le JAR ne nécessite aucune dépendance de plugin, aucun compte et aucun service payant.
 
+## Administration, zones et événements
+
+`/music admin` ouvre l'administration dans le navigateur via un lien valable
+30 minutes. Un joueur doit rester connecté avec la permission administrateur.
+Un lien émis par la console fonctionne aussi. L'interface écoute par défaut sur
+`127.0.0.1:8125` ; elle est réservée à la machine du serveur. Pour un accès distant,
+configurer `admin.bind` et une `admin.public-url` derrière un proxy HTTPS.
+
+L'interface permet d'importer des **OGG ou MP3**, de les préécouter, de réordonner
+les playlists, de créer des zones, des déclencheurs et des disques. FFmpeg doit
+être disponible dans le PATH, ou son chemin doit être indiqué dans `admin.ffmpeg`.
+Il est déjà disponible sur la machine utilisée pour développer cette version.
+Les fichiers importés sont convertis en OGG Vorbis mono ; la durée est détectée
+automatiquement. Le pack est reconstruit après chaque import réussi. Un bouton
+permet de le proposer aux joueurs connectés, qui doivent l'accepter.
+Les imports se font en arrière-plan, avec progression, une limite de 32 Mo par
+fichier et de 600 secondes par morceau par défaut. Un fichier trop long est
+refusé, pas tronqué. Une conversion qui échoue n'ajoute pas de morceau incomplet.
+
+```text
+/music playlist create Foret
+/music playlist add Foret Chill
+/music playlist create Combat
+/music playlist add Combat Arcade
+/music radio Foret
+/music radio off
+/music zone wand
+/music zone create foret Foret
+/music trigger set bataille COMBAT * Combat 12 80
+/music trigger set boss BOSS WITHER Combat 15 100
+/music trigger set bois BIOME FOREST Foret 5 40
+/music disc create theme Reforged
+/music disc give theme MonJoueur
+/music disc eject
+```
+
+Pour créer une zone en jeu, prendre la baguette avec `/music zone wand`, faire
+un clic gauche sur le premier coin puis un clic droit sur le second, et lancer
+`zone create`. Une zone est un volume rectangulaire, avec un monde et une priorité.
+Ses données sont conservées après un redémarrage.
+
+Les événements disponibles sont COMBAT, BOSS, BIOME, JOIN, DEATH et RESPAWN.
+COMBAT réagit aux dégâts entre entités, y compris les projectiles de joueurs.
+BOSS réagit à un Wither ou un Ender Dragon à proximité, et aux attaques contre
+ces boss. BIOME maintient l'ambiance tant que le biome correspond au filtre.
+La priorité la plus haute prend le relais de la zone ou de la radio ; le joueur
+retrouve l'ambiance normale lorsque le déclencheur expire. `*` accepte tous les
+cas ; un filtre peut être un nom de biome ou d'entité fourni par le serveur.
+
+Les disques sont des objets d'inventaire Minecraft avec un nom et un morceau
+associé. Un clic droit avec le disque sur un jukebox l'insère ; `disc eject`, en
+regardant le jukebox, le rend au joueur. Le propriétaire du jukebox est respecté.
+Les playlists, les zones, les règles et les définitions de disques sont éditables
+dans `state.yml` et `ambiences.yml`, puis rechargeables avec `/music reload`.
+
+![Administration : import MP3 terminé](docs/admin-import.jpg)
+
 ## Installer
 
 1. Arrêter le serveur et placer `Music-Reforged-1.0.0.jar` dans `plugins/`.
@@ -108,7 +165,8 @@ Placer le fichier dans `plugins/MusicReforged/audio/monsite/chanson.ogg` puis :
 ```
 
 Le nom `monsite:chanson` correspond à l'entrée du pack générée depuis le chemin
-du fichier. Le plugin ne convertit pas les MP3 lui-même.
+du fichier. L'import depuis le navigateur effectue cette conversion automatiquement
+avec FFmpeg ; l'ajout manuel ci-dessus utilise un fichier OGG déjà préparé.
 On peut aussi créer `plugins/MusicReforged/Music/MaChanson.txt` :
 
 ```text
@@ -157,8 +215,18 @@ la configuration entière de la station.
 
 ## Comportement audio
 
-Chaque joueur reçoit une seule radio : la radio locale admissible la plus proche,
-puis une radio globale de son monde. Cela évite les doublons et l'arrêt mutuel
+Les trois boucles originales et les morceaux importés sont préparés en segments
+de 250 ms. Le moteur fait monter la nouvelle ambiance et descendre la précédente
+pendant la durée configurée dans `transitions.seconds` (2 secondes par défaut).
+Cette méthode change le gain entre segments sans redémarrer la chanson entière.
+Elle augmente la taille du pack et le nombre de paquets audio envoyés. Les sons
+vanilla et les anciens morceaux sans segments gardent une lecture classique ;
+le navigateur les distingue. Le fondu est validé par les paquets et leurs gains,
+mais sa restitution perceptive reste à écouter dans un vrai client Minecraft.
+
+Les ambiances de zones, d'événements et la radio personnelle sont départagées
+par priorité. Sans ambiance active, le joueur reçoit la radio locale admissible
+la plus proche, puis une radio globale de son monde. Cela évite les doublons et l'arrêt mutuel
 de plusieurs copies du même son. Le rayon exclut les auditeurs hors de portée ;
 le volume envoyé tient compte de l'atténuation Minecraft et du réglage personnel.
 Les jukeboxes de chunks déchargés ne forcent pas le chargement du monde.
@@ -176,7 +244,9 @@ Sur Windows : `./build.ps1 -JavaHome C:\chemin\jdk -Maven C:\chemin\mvn.cmd`.
 Le bytecode cible Java 8 ; le serveur impose sa propre version Java.
 `python tools/bootstrap.py` télécharge Maven et les JDK de test si nécessaire.
 Les OGG sont déjà inclus dans les sources ; FFmpeg est nécessaire seulement
-pour les régénérer avec `python tools/make_assets.py`.
+pour les régénérer avec `python tools/make_assets.py` ou importer de nouveaux morceaux.
+Les tests de protocole demandent aussi Node.js : après `bootstrap.py`, exécuter
+`npm install --prefix .tools/protocol`.
 
 ```text
 python tools/prepare_servers.py --all
@@ -190,5 +260,9 @@ Les scripts créent des mondes jetables dans `test-servers/`, lient les serveurs
 officiels par SHA-256 et arrêtent les serveurs après les tests.
 Le client de protocole vérifie les paquets, pas une restitution sonore humaine.
 Voir `docs/COMPATIBILITY.md` et `docs/matrix-results.json` pour les preuves exactes.
+Le packaging crée le JAR, une archive d'installation et une archive des sources
+complètes dans `dist/`, avec leurs SHA-256. Il vérifie que le JAR correspond bien
+au binaire de la matrice réussie. Les dépendances de test, mondes et données
+locales d'administration sont exclus des archives.
 
 Licence GPL-2.0-or-later ; crédits et dépendances dans `NOTICE` et `licenses/`.

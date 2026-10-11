@@ -15,9 +15,9 @@ public final class Library {
     public void defaults() throws IOException {
         Files.createDirectories(directory);
         if (Files.exists(directory.resolve(".initialized"))) return;
-        createIfAbsent(new Track("Reforged", "musicreforged:reforged", 16));
-        createIfAbsent(new Track("Chill", "musicreforged:chill", 16));
-        createIfAbsent(new Track("Arcade", "musicreforged:arcade", 16));
+        createIfAbsent(new Track("Reforged", "musicreforged:reforged", 16, 64));
+        createIfAbsent(new Track("Chill", "musicreforged:chill", 16, 64));
+        createIfAbsent(new Track("Arcade", "musicreforged:arcade", 16, 64));
         createIfAbsent(new Track("Cat", "minecraft:music_disc.cat", 185));
         createIfAbsent(new Track("Blocks", "minecraft:music_disc.blocks", 345));
         createIfAbsent(new Track("Stal", "minecraft:music_disc.stal", 150));
@@ -32,7 +32,7 @@ public final class Library {
         Path file = directory.resolve(track.id + ".txt").normalize();
         if (!file.getParent().equals(directory.normalize())) throw new IllegalArgumentException("Chemin invalide");
         if (Files.exists(file)) throw new IllegalArgumentException("Ce morceau existe deja");
-        AtomicFiles.write(file, "# Music Reforged — made by hash014\nTime:" + track.seconds + "\nSoundname:" + track.sound + "\n");
+        AtomicFiles.write(file, "# Music Reforged — made by hash014\nTime:" + track.seconds + "\nSoundname:" + track.sound + "\nSegments:" + track.segments + "\n");
     }
     public Map<String, Track> load() throws IOException {
         Map<String, Track> result = new TreeMap<>();
@@ -50,7 +50,7 @@ public final class Library {
         return result;
     }
     public static Track parse(String id, List<String> lines) {
-        String sound = id.toLowerCase(Locale.ROOT); double seconds = Double.NaN;
+        String sound = id.toLowerCase(Locale.ROOT); double seconds = Double.NaN; int segments = 0;
         for (String line : lines) {
             line = line.trim();
             if (line.startsWith("#") || line.isEmpty() || line.equals("[&&END&&]")) continue;
@@ -58,7 +58,8 @@ public final class Library {
             String field = line.substring(0, colon).trim().toLowerCase(Locale.ROOT), value = line.substring(colon + 1).trim();
             if (field.equals("time")) seconds = Double.parseDouble(value);
             if (field.equals("songname") || field.equals("soundname")) sound = value;
+            if (field.equals("segments")) segments = Integer.parseInt(value);
         }
-        return new Track(id, sound, seconds);
+        return new Track(id, sound, seconds, segments);
     }
 }

@@ -14,6 +14,7 @@ public final class RadioBox {
     public int station = -1;
     public float volume = 1;
     public boolean active, global;
+    public String disc;
     public RadioBox(String world, int x, int y, int z, UUID owner) {
         if (world == null || world.isEmpty() || owner == null) throw new IllegalArgumentException("Jukebox invalide");
         this.world = world; this.x = x; this.y = y; this.z = z; this.owner = owner;

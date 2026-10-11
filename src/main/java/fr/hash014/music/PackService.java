@@ -131,6 +131,7 @@ public final class PackService implements AutoCloseable {
             if (bind.equals("0.0.0.0") || bind.equals("::")) return "";
             u = "http://" + bind + ":" + plugin.getConfig().getInt("resource-pack.port", 8124) + "/pack.zip";
         }
+        if (u.isEmpty() && plugin.administration() != null && !plugin.administration().baseUrl().isEmpty()) u = plugin.administration().baseUrl() + "/pack.zip";
         if (u.isEmpty()) return "";
         try { URI uri = new URI(u); if ((!uri.getScheme().equalsIgnoreCase("http") && !uri.getScheme().equalsIgnoreCase("https")) || uri.getHost() == null) throw new IllegalArgumentException("URL du pack invalide"); }
         catch (URISyntaxException | NullPointerException e) { throw new IllegalArgumentException("URL du pack invalide", e); }

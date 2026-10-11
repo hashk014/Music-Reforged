@@ -23,6 +23,7 @@ public final class StateStore {
             ConfigurationSection s = ss.getConfigurationSection(key);
             if (s == null) throw new IOException("Station illisible: " + key);
             Station station = new Station(Integer.parseInt(key), UUID.fromString(s.getString("owner")));
+            station.name = s.getString("name", "Station " + station.id);
             for (String id : s.getStringList("queue")) {
                 if (!id.matches("[A-Za-z0-9 _-]{1,80}")) throw new IOException("Morceau invalide: " + id);
                 station.queue.add(id);
@@ -40,6 +41,7 @@ public final class StateStore {
             box.station = b.getInt("station", -1); box.volume = (float) b.getDouble("volume", 1);
             if (!Float.isFinite(box.volume) || box.volume < 0 || box.volume > 10) throw new IOException("Volume jukebox invalide");
             box.global = b.getBoolean("global"); box.active = b.getBoolean("active");
+            box.disc = b.getString("disc");
             if (boxes.put(box.key(), box) != null) throw new IOException("Jukebox duplique: " + box.key());
         }
         ConfigurationSection ps = y.getConfigurationSection("players");
@@ -54,6 +56,7 @@ public final class StateStore {
         for (Station s : stations.values()) {
             String p = "stations." + s.id + ".";
             y.set(p + "owner", s.owner.toString()); y.set(p + "queue", new ArrayList<>(s.queue));
+            y.set(p + "name", s.name);
             y.set(p + "radius", s.radius); y.set(p + "shuffle", s.shuffle); y.set(p + "paused", s.paused);
         }
         int n = 0;
@@ -62,6 +65,7 @@ public final class StateStore {
             y.set(p + "world", b.world); y.set(p + "x", b.x); y.set(p + "y", b.y); y.set(p + "z", b.z);
             y.set(p + "owner", b.owner.toString()); y.set(p + "station", b.station);
             y.set(p + "volume", b.volume); y.set(p + "global", b.global); y.set(p + "active", b.active);
+            y.set(p + "disc", b.disc);
         }
         for (Map.Entry<UUID, Float> p : preferences.entrySet()) y.set("players." + p.getKey(), p.getValue());
         AtomicFiles.write(file, y.saveToString());

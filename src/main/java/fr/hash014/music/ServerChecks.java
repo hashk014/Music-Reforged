@@ -65,6 +65,9 @@ final class ServerChecks {
         catch (IOException expected) { check(p.state().stations.get(0) == running, "invalid-library-reload-preserved"); }
         finally { Files.delete(broken); }
         p.reloadMusic(); check(p.state().stations.get(0).queue.equals(Arrays.asList("Reforged", "Chill")), "valid-reload");
+        check(p.track("Reforged").segments == 64, "transition-segments");
+        String login = p.administration().login(console);
+        AtomicFiles.write(p.getDataFolder().toPath().resolve("admin-test.json"), new Gson().toJson(Collections.singletonMap("login", login)));
         p.getLogger().info("SELFTEST PASS checks=" + checks);
     }
     void player(String name) throws Exception {
@@ -100,8 +103,37 @@ final class ServerChecks {
         Bukkit.getScheduler().runTaskLater(p, () -> {
             p.engine().stop(player); box.global = false; p.engine().tick();
             check(p.engine().listeners() == 1, "live-local-listener");
-            p.persist(); p.getLogger().info("PLAYERTEST PASS checks=" + checks);
+            try { advanced(player, box); p.persist(); p.getLogger().info("PLAYERTEST PASS checks=" + checks); }
+            catch (Exception ex) { p.getLogger().log(java.util.logging.Level.SEVERE, "CHECK FAIL advanced features", ex); }
         }, 40);
+    }
+    private void advanced(Player player, RadioBox box) throws Exception {
+        boolean wasOp = player.isOp(); player.setOp(true);
+        try {
+            Station playlist = p.ambiences().createPlaylist("TestAmbience", player.getUniqueId()); playlist.queue.add("Arcade");p.persist();
+            command(player,"zone","wand");org.bukkit.inventory.ItemStack wand=player.getInventory().getItem(player.getInventory().first(Material.STICK));
+            org.bukkit.event.player.PlayerInteractEvent first=new org.bukkit.event.player.PlayerInteractEvent(player,org.bukkit.event.block.Action.LEFT_CLICK_BLOCK,wand,player.getWorld().getBlockAt(0,80,0),org.bukkit.block.BlockFace.UP);
+            org.bukkit.event.player.PlayerInteractEvent second=new org.bukkit.event.player.PlayerInteractEvent(player,org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK,wand,player.getWorld().getBlockAt(5,85,5),org.bukkit.block.BlockFace.UP);
+            Bukkit.getPluginManager().callEvent(first);Bukkit.getPluginManager().callEvent(second);check(first.isCancelled()&&second.isCancelled(),"in-game-zone-wand");
+            command(player,"zone","create","testzone",String.valueOf(playlist.id));check(p.ambiences().zones.containsKey("testzone"),"in-game-zone-create");
+            p.engine().stop(player);p.engine().tick();AmbientManager.Selection selected=p.ambiences().resolve(player,1);
+            check(selected!=null&&selected.source.equals("zone:testzone"),"zone-entry-selection");
+            p.ambiences().rule("testcombat","COMBAT","*",0,1,100);
+            org.bukkit.event.entity.EntityDamageByEntityEvent combat=new org.bukkit.event.entity.EntityDamageByEntityEvent(player,player,org.bukkit.event.entity.EntityDamageEvent.DamageCause.ENTITY_ATTACK,1d);
+            Bukkit.getPluginManager().callEvent(combat);selected=p.ambiences().resolve(player,1);check(selected!=null&&selected.source.equals("event:testcombat"),"combat-event-routing");
+            p.ambiences().rule("testboss","BOSS","WITHER",playlist.id,1,120);p.ambiences().trigger(player,"BOSS","WITHER");selected=p.ambiences().resolve(player,1);check(selected!=null&&selected.source.equals("event:testboss"),"boss-priority");
+            p.ambiences().rule("testbiome","BIOME",player.getLocation().getBlock().getBiome().name(),playlist.id,1,150);p.ambiences().trigger(player,"BIOME",player.getLocation().getBlock().getBiome().name());selected=p.ambiences().resolve(player,1);check(selected!=null&&selected.source.equals("event:testbiome"),"biome-routing");
+            p.ambiences().disc("testdisc","Chill");org.bukkit.inventory.ItemStack item=p.ambiences().discItem("testdisc");player.setItemInHand(item);
+            org.bukkit.event.player.PlayerInteractEvent insert=new org.bukkit.event.player.PlayerInteractEvent(player,org.bukkit.event.block.Action.RIGHT_CLICK_BLOCK,item,box.location().getBlock(),org.bukkit.block.BlockFace.UP);
+            Bukkit.getPluginManager().callEvent(insert);check(insert.isCancelled()&&"testdisc".equals(box.disc),"custom-disc-insert");
+            p.engine().tick();check(p.ambiences().discStation(box).current()!=null,"custom-disc-playback");
+            AmbientManager saved=new AmbientManager(p);saved.load();check(saved.zones.containsKey("testzone")&&saved.rules.containsKey("testboss")&&saved.discs.containsKey("testdisc"),"ambience-persistence");
+            Location aim=new Location(player.getWorld(),box.x+.5,box.y+1.0,box.z+.5,0,90);player.teleport(aim);
+            command(player,"disc","eject");check(box.disc==null,"custom-disc-eject");
+            command(player,"radio",String.valueOf(playlist.id));check(p.ambiences().resolve(player,1)!=null,"personal-radio");command(player,"radio","off");
+            p.ambiences().zones.remove("testzone");p.ambiences().rules.remove("testcombat");p.ambiences().rules.remove("testboss");p.ambiences().rules.remove("testbiome");p.ambiences().discs.remove("testdisc");p.ambiences().save();p.ambiences().clear(player);
+            p.state().stations.remove(playlist.id);box.station=0;box.active=true;box.volume=1.1f;box.global=false;
+        } finally {player.setOp(wasOp);}
     }
     void persist() {
         check(p.state().stations.containsKey(0), "restart-station");

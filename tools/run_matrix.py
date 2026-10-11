@@ -16,7 +16,7 @@ def freeport():
 
 def test(version, toolcache):
     folder = ROOT / 'test-servers' / version
-    port, httpport = freeport(), freeport()
+    port, httpport, adminport = freeport(), freeport(), freeport()
     plugins = folder / 'plugins'; plugins.mkdir(exist_ok=True)
     shutil.copy2(JAR, plugins / JAR.name)
     for name in ('test-world','test-world_nether','test-world_the_end','plugins/MusicReforged'):
@@ -26,6 +26,7 @@ def test(version, toolcache):
     data = plugins / 'MusicReforged'; data.mkdir()
     with zipfile.ZipFile(JAR) as z: config=z.read('config.yml').decode()
     config=config.replace('serve: false','serve: true').replace('port: 8124',f'port: {httpport}')
+    config=config.replace('port: 8125',f'port: {adminport}')
     (data/'config.yml').write_text(config,encoding='utf-8')
     (folder/'eula.txt').write_text('eula=true\n')
     (folder/'server.properties').write_text(f'server-ip=127.0.0.1\nserver-port={port}\nonline-mode=false\nenforce-secure-profile=false\nwhite-list=false\nallow-flight=true\nlevel-name=test-world\nlevel-type=flat\nspawn-protection=0\nview-distance=2\nsimulation-distance=2\nmax-players=4\nallow-nether=false\nspawn-npcs=false\nspawn-monsters=false\nspawn-animals=false\ngenerate-structures=false\nenable-query=false\nenable-rcon=false\nnetwork-compression-threshold=-1\n')
@@ -67,6 +68,8 @@ def test(version, toolcache):
                 try: urllib.request.urlopen(f'http://127.0.0.1:{httpport}/pack.zip/../config.yml',timeout=10); raise AssertionError('Path leak')
                 except urllib.error.HTTPError as e: assert e.code==404
                 result['http']=True
+                from test_admin import verify
+                result['admin']=verify(folder)
                 botlog=open(folder/'client-test.log','w',encoding='utf-8')
                 if version in ('26.2','26.3'): send(p,'music protocolinfo');phase='protocol'
                 else:
@@ -76,7 +79,7 @@ def test(version, toolcache):
             if phase=='player' and 'Hash014Test' in line and 'logged in with entity id' in line: send(p,'music playercheck Hash014Test');phase='checking-player'
             if 'PLAYERTEST PASS' in line:
                 result['playerChecks']=int(re.search(r'checks=(\d+)',line)[1]); result['status']='first-boot-passed';break
-            if 'CHECK FAIL' in line or 'Ownership bypass' in line or 'Initialisation impossible' in line or 'Commande Music echouee' in line or 'Could not pass event' in line:
+            if any(s in line for s in ('CHECK FAIL','Ownership bypass','Initialisation impossible','Commande Music echouee','Could not pass event','generated an exception','NoSuchMethodError','IncompatibleClassChangeError')):
                 result['status']='test-failed';break
     except Exception as e: result['status']='runner-failed';result['error']=repr(e)
     finally:

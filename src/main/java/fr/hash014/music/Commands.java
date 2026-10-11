@@ -10,7 +10,7 @@ import org.bukkit.entity.Player;
 
 public final class Commands implements CommandExecutor, TabCompleter {
     private final MusicReforged p;
-    private static final List<String> ACTIONS = Arrays.asList("help", "listSongs", "listStations", "play", "addToQueue", "removeFromQueue", "clearQueue", "removeStation", "listStationSongs", "toggleRandomizeSongs", "setRadius", "pause", "resume", "skip", "listen", "playOnce", "stop", "volume", "box", "getPack", "createSong", "reload", "status", "author");
+    private static final List<String> ACTIONS = Arrays.asList("help", "admin", "playlist", "radio", "zone", "trigger", "disc", "listSongs", "listStations", "play", "addToQueue", "removeFromQueue", "clearQueue", "removeStation", "listStationSongs", "toggleRandomizeSongs", "setRadius", "pause", "resume", "skip", "listen", "playOnce", "stop", "volume", "box", "getPack", "createSong", "reload", "status", "author");
     public Commands(MusicReforged p) { this.p = p; }
     public static String[] quoted(String[] args) {
         String text = String.join(" ", args); List<String> result = new ArrayList<>(); StringBuilder token = new StringBuilder(); boolean quote = false;
@@ -61,6 +61,50 @@ public final class Commands implements CommandExecutor, TabCompleter {
             }
             if (!p.use(sender)) throw new IllegalArgumentException("Permission insuffisante");
             switch (action) {
+                case "admin": admin(sender); p.tell(sender, "Administration audio (connexion valable 30 minutes) : " + p.administration().login(sender)); break;
+                case "radio": need(a, 2, "radio <playlist ou station|off>"); p.ambiences().radio(player(sender), a[1]); p.tell(sender, "Radio personnelle : " + a[1]); break;
+                case "playlist": {
+                    need(a, 2, "playlist create|add|remove|list <nom> [morceau ou index]"); String op=a[1].toLowerCase(Locale.ROOT);
+                    if (op.equals("list")) { for (Station s:p.state().stations.values()) p.tell(sender, s.name + " (#" + s.id + ") : " + s.queue.size() + " morceaux"); break; }
+                    need(a, 3, "playlist " + op + " <nom> [morceau ou index]");
+                    if (op.equals("create")) {
+                        if (!p.admin(sender) && !sender.hasPermission("musicreforged.create") && !sender.hasPermission("music.commands")) throw new IllegalArgumentException("Permission de creation requise");
+                        Station s=p.ambiences().createPlaylist(a[2], sender instanceof Player?((Player)sender).getUniqueId():AmbientManager.CONSOLE); p.tell(sender,"Playlist " + s.name + " creee (#" + s.id + ").");
+                    } else {
+                        Station s=p.ambiences().playlist(a[2]); if (!p.owns(sender,s.owner)) throw new IllegalArgumentException("Cette playlist ne t'appartient pas");
+                        need(a, 4, "playlist " + op + " <nom> <morceau ou index>");
+                        if (op.equals("add")) { if (s.queue.size()>=p.getConfig().getInt("max-queue-size",500)) throw new IllegalArgumentException("Playlist pleine"); s.queue.add(p.track(a[3]).id); }
+                        else if(op.equals("remove")){if(s.queue.isEmpty())throw new IllegalArgumentException("Playlist vide");s.queue.remove(integer(a[3],0,s.queue.size()-1));s.reset();}
+                        else throw new IllegalArgumentException("playlist : create, add, remove, list");p.persist();p.tell(sender,"Playlist mise a jour.");
+                    }
+                    break;
+                }
+                case "zone": {
+                    admin(sender);need(a,2,"zone wand|create|remove|list");
+                    switch(a[1].toLowerCase(Locale.ROOT)) {
+                        case "wand":p.ambiences().wand(player(sender));break;
+                        case "create":need(a,4,"zone create <nom> <playlist>");p.ambiences().selectedZone(player(sender),a[2],a[3]);p.tell(sender,"Zone musicale creee.");break;
+                        case "remove":need(a,3,"zone remove <nom>");if(p.ambiences().zones.remove(AmbientManager.key(a[2]))==null)throw new IllegalArgumentException("Zone inconnue");p.ambiences().save();p.tell(sender,"Zone supprimee.");break;
+                        case "list":for(AmbientManager.Zone z:p.ambiences().zones.values())p.tell(sender,z.name+" : "+z.world+", station "+z.station);break;
+                        default:throw new IllegalArgumentException("zone : wand, create, remove, list");
+                    }break;
+                }
+                case "trigger": {
+                    admin(sender);need(a,2,"trigger set|remove|list");
+                    if(a[1].equalsIgnoreCase("set")){need(a,6,"trigger set <id> <COMBAT|BOSS|BIOME|JOIN|DEATH|RESPAWN> <filtre ou *> <playlist> [secondes] [priorite]");p.ambiences().rule(a[2],a[3],a[4],p.ambiences().playlist(a[5]).id,a.length>6?Double.parseDouble(a[6]):12,a.length>7?integer(a[7],0,1000):70);p.tell(sender,"Declencheur enregistre.");}
+                    else if(a[1].equalsIgnoreCase("remove")){need(a,3,"trigger remove <id>");p.ambiences().rules.remove(AmbientManager.key(a[2]));p.ambiences().save();p.tell(sender,"Declencheur supprime.");}
+                    else if(a[1].equalsIgnoreCase("list"))for(AmbientManager.Rule r:p.ambiences().rules.values())p.tell(sender,r.id+" : "+r.event+" / "+r.selector+" -> station "+r.station);
+                    else throw new IllegalArgumentException("trigger : set, remove, list");break;
+                }
+                case "disc": {
+                    need(a,2,"disc create|give|eject|list");String op=a[1].toLowerCase(Locale.ROOT);
+                    if(op.equals("eject")){Player pl=player(sender);RadioBox b=box(pl);if(b.disc==null)throw new IllegalArgumentException("Ce jukebox n'a pas de disque personnalise");AmbientManager.give(pl,p.ambiences().discItem(b.disc));b.disc=null;b.active=false;p.persist();p.tell(sender,"Disque retire.");break;}
+                    admin(sender);
+                    if(op.equals("create")){need(a,4,"disc create <id> <morceau>");p.ambiences().disc(a[2],a[3]);p.tell(sender,"Disque personnalise cree.");}
+                    else if(op.equals("give")){need(a,3,"disc give <id> [joueur]");Player target=a.length>3?Bukkit.getPlayerExact(a[3]):player(sender);if(target==null)throw new IllegalArgumentException("Joueur deconnecte");AmbientManager.give(target,p.ambiences().discItem(a[2]));p.tell(sender,"Disque donne.");}
+                    else if(op.equals("list"))for(AmbientManager.Disc d:p.ambiences().discs.values())p.tell(sender,d.id+" : "+d.track);
+                    else throw new IllegalArgumentException("disc : create, give, eject, list");break;
+                }
                 case "menu": if (sender instanceof Player) p.menus().open((Player) sender, null, 0); else help(sender); break;
                 case "help": case "?": help(sender); break;
                 case "author": case "author1": p.tell(sender, "Music Reforged 1.0.0 — made by hash014. Base fonctionnelle: Music par Zombie_Striker. GPL-2.0-or-later; sans garantie. Sources fournies dans la distribution."); break;
@@ -142,7 +186,7 @@ public final class Commands implements CommandExecutor, TabCompleter {
                 case "box": { Player player = player(sender); RadioBox b = box(player);
                     if (a.length == 1) { p.menus().open(player, b, 0); break; }
                     switch (a[1].toLowerCase(Locale.ROOT)) {
-                        case "station": need(a, 3, "box station <station>"); if (!player.hasPermission("music.changesong")) throw new IllegalArgumentException("Permission insuffisante"); b.station = station(sender, a[2], false).id; b.active = true; break;
+                        case "station": need(a, 3, "box station <station>"); if (!player.hasPermission("music.changesong")) throw new IllegalArgumentException("Permission insuffisante"); if(b.disc!=null)throw new IllegalArgumentException("Retire le disque avec /music disc eject"); b.station = station(sender, a[2], false).id; b.active = true; break;
                         case "volume": need(a, 3, "box volume <0 a 10>"); if (!player.hasPermission("music.changevolume")) throw new IllegalArgumentException("Permission insuffisante"); b.volume = volume(a[2], 10); break;
                         case "global": if (!p.global(sender)) throw new IllegalArgumentException("Permission globale requise"); b.global = true; break;
                         case "local": b.global = false; break;
@@ -171,6 +215,9 @@ public final class Commands implements CommandExecutor, TabCompleter {
     }
     private void help(CommandSender s) {
         p.tell(s, "Music Reforged — made by hash014");
+        p.tell(s, "/music admin | playlist create|add|remove|list | radio <playlist|off>");
+        p.tell(s, "/music zone wand puis zone create <nom> <playlist> | trigger set <id> <evenement> <filtre> <playlist>");
+        p.tell(s, "/music disc create <id> <morceau> | disc give <id> [joueur] | disc eject");
         for (String line : Arrays.asList("/music : ouvrir le catalogue; clic pour ecouter", "/music play <morceau> <station> | addToQueue <morceau> <station>", "/music listSongs | listStations | listStationSongs <station>", "/music removeFromQueue <index depuis 0> <station> | clearQueue <station>", "/music setRadius <station> <blocs> | toggleRandomizeSongs <station>", "/music pause|resume|skip|removeStation <station>", "/music listen <morceau> | playOnce <morceau> (admin, monde entier)", "/music volume <0 a 1> | stop | getPack", "Pose un jukebox accroupi, puis clic droit : stations, volume et mode global.", "/music box station <id> | box volume <0 a 10> | box global|local|on|off", "Admin : createSong <nom> <namespace:son> <duree> | reload | status", "Noms avec espaces : entre guillemets, ex. \"Mon morceau\"")) p.tell(s, line);
     }
     @Override public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {

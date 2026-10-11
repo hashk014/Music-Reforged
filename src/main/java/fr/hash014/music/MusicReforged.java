@@ -17,6 +17,9 @@ public final class MusicReforged extends JavaPlugin {
     private AudioEngine engine;
     private PackService pack;
     private Menus menus;
+    private AmbientManager ambiences;
+    private AudioImporter importer;
+    private AdminServer adminServer;
     private boolean initialized;
     @Override public void onEnable() {
         try {
@@ -25,8 +28,12 @@ public final class MusicReforged extends JavaPlugin {
             LegacyImporter.importFirstInstall(this, folder);
             library = new Library(folder.resolve("Music"), getLogger()); library.defaults(); tracks = library.load();
             state = new StateStore(folder.resolve("state.yml")); state.load();
+            ambiences = new AmbientManager(this); ambiences.load();
             if (Bukkit.getPluginManager().getPlugin("Music") != null) getLogger().warning("Ancien plugin Music encore installe: retirer Music.jar pour eviter le conflit /music.");
             engine = new AudioEngine(this); pack = new PackService(this); pack.initialize();
+            importer = new AudioImporter(this); adminServer = new AdminServer(this);
+            try { adminServer.start(); } catch (java.io.IOException e) { getLogger().warning("Administration indisponible: " + e.getMessage() + ". Modifie admin.port puis redemarre."); }
+            getServer().getPluginManager().registerEvents(ambiences, this);
             menus = new Menus(this); getServer().getPluginManager().registerEvents(menus, this);
             Commands commands = new Commands(this); getCommand("music").setExecutor(commands); getCommand("music").setTabCompleter(commands);
             Bukkit.getScheduler().runTaskTimer(this, () -> engine.tick(), 1, 1);
@@ -44,20 +51,25 @@ public final class MusicReforged extends JavaPlugin {
         double volume = getConfig().getDouble("default-volume", 1);
         if (stations < 1 || stations > 10000 || queue < 1 || queue > 10000 || radius < 1 || radius > max || max > 4096 || !Double.isFinite(volume) || volume < 0 || volume > 10) throw new IllegalArgumentException("Limites invalides dans config.yml");
         if (getConfig().getLong("resource-pack.join-delay-ticks", 40) < 0) throw new IllegalArgumentException("Delai de pack negatif");
+        double fade = getConfig().getDouble("transitions.seconds", 2);
+        int upload = getConfig().getInt("admin.max-upload-mb", 32), duration = getConfig().getInt("admin.max-duration-seconds", 600), port = getConfig().getInt("admin.port", 8125);
+        if (!Double.isFinite(fade) || fade < .25 || fade > 10 || upload < 1 || upload > 64 || duration < 1 || duration > 3600 || port < 1 || port > 65535) throw new IllegalArgumentException("Configuration d'administration ou de transitions invalide");
     }
     @Override public void onDisable() {
         Bukkit.getScheduler().cancelTasks(this);
         if (engine != null) engine.stopAll(); if (pack != null) pack.close();
+        if (importer != null) importer.close(); if (adminServer != null) adminServer.close();
         if (initialized && state != null) persist();
     }
     public void reloadMusic() throws Exception {
         Map<String, Track> nextTracks = library.load();
         StateStore next = new StateStore(state.file()); next.load();
+        AmbientManager nextAmbiences = new AmbientManager(this); nextAmbiences.load();
         // Invalid data is rejected before the running state is replaced.
         String previousConfig = getConfig().saveToString();
         try {
             reloadConfig(); validateConfig();
-            pack.build(); engine.stopAll(); tracks = nextTracks; state = next;
+            pack.build(); engine.stopAll(); tracks = nextTracks; state = next; ambiences.replace(nextAmbiences);
         } catch (Exception e) { getConfig().loadFromString(previousConfig); throw e; }
     }
     public void persist() {
@@ -77,4 +89,7 @@ public final class MusicReforged extends JavaPlugin {
     public AudioEngine engine() { return engine; }
     public PackService pack() { return pack; }
     public Menus menus() { return menus; }
+    public AmbientManager ambiences() { return ambiences; }
+    public AudioImporter importer() { return importer; }
+    public AdminServer administration() { return adminServer; }
 }

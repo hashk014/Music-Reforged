@@ -77,7 +77,8 @@ public final class Menus implements Listener {
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void broken(BlockBreakEvent e) {
-        if (plugin.state().boxes.remove(RadioBox.key(e.getBlock().getLocation())) != null) plugin.persist();
+        RadioBox box = plugin.state().boxes.remove(RadioBox.key(e.getBlock().getLocation()));
+        if (box != null) { if (box.disc != null && plugin.ambiences().discs.containsKey(box.disc) && e.getPlayer().getGameMode() != GameMode.CREATIVE) AmbientManager.give(e.getPlayer(), plugin.ambiences().discItem(box.disc)); plugin.persist(); }
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void explode(EntityExplodeEvent e) {
@@ -110,6 +111,7 @@ public final class Menus implements Listener {
                 else {
                     if (!p.hasPermission("music.changesong")) throw new IllegalArgumentException("Permission insuffisante");
                     int id = Integer.parseInt(m.items.get(slot));
+                    if (b.disc != null) throw new IllegalArgumentException("Retire le disque avec /music disc eject avant de choisir une station");
                     if (!plugin.state().stations.containsKey(id)) throw new IllegalArgumentException("Station supprimee");
                     b.station = id; b.active = true; plugin.persist(); plugin.tell(p, "Station " + id + " selectionnee.");
                 }

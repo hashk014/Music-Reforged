@@ -4,6 +4,16 @@ max-queue-size: 500
 default-radius: 64
 max-radius: 512
 default-volume: 1.0
+transitions:
+  seconds: 2.0
+admin:
+  enabled: true
+  bind: 127.0.0.1
+  port: 8125
+  public-url: ''
+  ffmpeg: ffmpeg
+  max-upload-mb: 32
+  max-duration-seconds: 600
 resource-pack:
   # One pack is generated with the exact server resource-pack format.
   # For public servers: host pack.zip on HTTPS, disable serve and set public-url.

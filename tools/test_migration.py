@@ -10,6 +10,7 @@ def run(toolcache=None):
     plugins=folder/'plugins';plugins.mkdir(exist_ok=True)
     own=plugins/'MusicReforged'
     if own.exists():shutil.rmtree(own)
+    own.mkdir();(own/'config.yml').write_text('admin:\n  enabled: false\n')
     legacy=plugins/'Music';(legacy/'Music').mkdir(parents=True,exist_ok=True)
     owner='19cd46b4-5227-3575-9cbf-64f1bc95421f'
     config=f"Loop:\n  '88':\n    s: [LegacySong]\n    p: {owner}\n    r: 2\n    rand: true\nJukeboxes:\n  original:\n    location:\n      ==: org.bukkit.Location\n      world: world-currently-unloaded\n      x: -32.0\n      y: 81.0\n      z: 42.0\n      pitch: 0.0\n      yaw: 0.0\n    owner: {owner}\n    station: 88\n    volume: -1\n    active: true\n"

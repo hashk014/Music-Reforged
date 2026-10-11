@@ -7,6 +7,7 @@ import java.util.*;
 public final class Station {
     public final int id;
     public UUID owner;
+    public String name;
     public final List<String> queue = new ArrayList<>();
     public boolean shuffle, paused;
     public int radius = 64;
@@ -16,6 +17,7 @@ public final class Station {
     public Station(int id, UUID owner) {
         if (id < 0 || owner == null) throw new IllegalArgumentException("Station invalide");
         this.id = id; this.owner = owner;
+        this.name = "Station " + id;
     }
     public Track current() { return current; }
     public int index() { return index; }

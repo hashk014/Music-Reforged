@@ -35,6 +35,14 @@ def generate():
             with wave.open(str(wav), 'wb') as w:
                 w.setparams((1, 2, RATE, len(pcm), 'NONE', 'not compressed')); w.writeframes(pcm.tobytes())
             subprocess.run([ffmpeg, '-hide_banner', '-loglevel', 'error', '-y', '-i', str(wav), '-c:a', 'libvorbis', '-q:a', '3', str(output)], check=True)
+            segments=output.parent/(name+'_segments'); segments.mkdir(exist_ok=True)
+            # Separate quarter-second sounds allow gain changes without restarting a long song.
+            for n in range(64):
+                frame=pathlib.Path(td)/'segment.wav'
+                start=round(n*.25*RATE);end=round((n+1)*.25*RATE)
+                with wave.open(str(frame),'wb') as w:
+                    w.setparams((1,2,RATE,end-start,'NONE','not compressed'));w.writeframes(pcm[start:end].tobytes())
+                subprocess.run([ffmpeg,'-hide_banner','-loglevel','error','-y','-i',str(frame),'-c:a','libvorbis','-q:a','3',str(segments/f'{n:05d}.ogg')],check=True)
     source = ROOT / 'upstream/resources/resourcepack/assets/minecraft/sounds'
     if source.exists():
         dest = RES / 'audio/minecraft'; dest.mkdir(parents=True, exist_ok=True)
