@@ -89,7 +89,8 @@ def test(version, toolcache):
     if result['status']=='first-boot-passed':
         client=(folder/'client-test.log').read_text(encoding='utf-8')
         result['soundPackets']=client.count('CLIENT SOUND');result['stopPackets']=client.count('CLIENT STOP');result['packPackets']=client.count('CLIENT PACK')
-        if not result['soundPackets'] or not result['packPackets']: result['status']='packet-check-failed'
+        result['adminLinkPackets']=client.count('CLIENT ADMINLINK OPEN_URL')
+        if not result['soundPackets'] or not result['packPackets'] or not result['adminLinkPackets']: result['status']='packet-check-failed'
         else:
             p,lines,thread=launch();started=time.monotonic()
             try:

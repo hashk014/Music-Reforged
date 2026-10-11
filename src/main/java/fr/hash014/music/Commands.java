@@ -61,7 +61,12 @@ public final class Commands implements CommandExecutor, TabCompleter {
             }
             if (!p.use(sender)) throw new IllegalArgumentException("Insufficient permission");
             switch (action) {
-                case "admin": admin(sender); p.tell(sender, "Audio administration (session valid for 30 minutes): " + p.administration().login(sender)); break;
+                case "admin": {
+                    admin(sender); String url = p.administration().login(sender);
+                    if (!(sender instanceof Player) || !ChatLinks.send((Player) sender, url))
+                        p.tell(sender, "Audio administration (session valid for 30 minutes): " + url);
+                    break;
+                }
                 case "radio": need(a, 2, "radio <playlist or station|off>"); p.ambiences().radio(player(sender), a[1]); p.tell(sender, "Personal radio: " + a[1]); break;
                 case "playlist": {
                     need(a, 2, "playlist create|add|remove|list <name> [track or index]"); String op=a[1].toLowerCase(Locale.ROOT);

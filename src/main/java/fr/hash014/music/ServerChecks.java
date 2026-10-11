@@ -110,6 +110,7 @@ final class ServerChecks {
     private void advanced(Player player, RadioBox box) throws Exception {
         boolean wasOp = player.isOp(); player.setOp(true);
         try {
+            command(player, "admin");
             Station playlist = p.ambiences().createPlaylist("TestAmbience", player.getUniqueId()); playlist.queue.add("Arcade");p.persist();
             command(player,"zone","wand");org.bukkit.inventory.ItemStack wand=player.getInventory().getItem(player.getInventory().first(Material.STICK));
             org.bukkit.event.player.PlayerInteractEvent first=new org.bukkit.event.player.PlayerInteractEvent(player,org.bukkit.event.block.Action.LEFT_CLICK_BLOCK,wand,player.getWorld().getBlockAt(0,80,0),org.bukkit.block.BlockFace.UP);

@@ -21,6 +21,12 @@ client.on('position', p => {
 });
 setInterval(()=>{if(lastPosition&&client.state==='play')client.write('position_look',lastPosition);},50).unref();
 client.on('packet', (p,meta) => {
+  if (['chat','system_chat','player_chat'].includes(meta.name)) {
+    let component=p;
+    if(typeof p.message==='string'){try{component=JSON.parse(p.message);}catch{}}
+    const text=JSON.stringify(component);
+    if(text.includes('open_url')&&text.includes('/#token='))console.log('CLIENT ADMINLINK OPEN_URL');
+  }
   if (meta.name.includes('sound') && !meta.name.includes('stop')) {sounds++; console.log('CLIENT SOUND',meta.name,JSON.stringify(p));}
   if (meta.name==='stop_sound') {stops++; console.log('CLIENT STOP',JSON.stringify(p));}
   if (meta.name==='custom_payload' && p.channel==='MC|StopSound') {stops++; console.log('CLIENT STOP',p.channel,p.data.toString('hex'));}

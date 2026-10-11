@@ -6,8 +6,9 @@ The JAR requires no other plugin, account or paid service.
 
 ## Administration, zones and events
 
-Run `/music admin` to open browser administration through a link valid for
-30 minutes. A player must remain online and retain administrator permission.
+Run `/music admin` to receive a clickable browser administration link valid for
+30 minutes. If clicking is disabled in your client, enable Web Links in Minecraft's
+chat settings. A player must remain online and retain administrator permission.
 Links issued from the console also work. By default, the interface listens on
 `127.0.0.1:8125`, accessible only from the server machine. For remote access,
 configure `admin.bind` and `admin.public-url` behind an HTTPS reverse proxy.
@@ -234,7 +235,8 @@ Bytecode targets Java 8; the server determines its required Java version.
 `python tools/bootstrap.py` downloads Maven and test JDKs if needed.
 The OGG assets are already included in the sources. FFmpeg is required to
 regenerate them with `python tools/make_assets.py` or import new tracks.
-Protocol tests also require Node.js: run `npm install --prefix .tools/protocol`
+Protocol tests also verify the administration link's OPEN_URL click event.
+They require Node.js: run `npm install --prefix .tools/protocol`
 after `bootstrap.py`.
 
 ```text
@@ -252,10 +254,10 @@ the JSON reports for the exact evidence and the English build's regression check
 
 Packaging creates the JAR, an installation ZIP and complete source ZIP under
 `dist/`, with SHA-256 checksums. It verifies that the JAR matches the successful
-runtime report. To package the English build using its regression report:
+runtime report. To package the latest English build with clickable administration links:
 
 ```text
-python tools/package_release.py --report docs/english-matrix-results.json
+python tools/package_release.py --report docs/admin-link-matrix-results.json
 ```
 
 Local test dependencies, worlds and administration sessions are excluded from

@@ -22,6 +22,14 @@ below refers to the earlier feature-complete JAR, not to the translated binary.
 
 ## Evidence and scope
 
+The subsequent clickable administration link fix is covered by
+[admin-link-matrix-results.json](admin-link-matrix-results.json). All four
+regression versions passed the same 224 assertions and additionally delivered
+an actual OPEN_URL click event to the protocol client. The server's component
+API translates the event into the appropriate legacy JSON or modern component
+format. Console output remains a plain, copyable URL. This report identifies
+the latest distributed JAR; the English translation report identifies the prior build.
+
 - **3,024 assertions** in the full matrix: 26 server checks, 24 player checks
   and 6 restart checks on each of 54 versions.
 - Actual MP3 and OGG import using FFmpeg, OGG previews, generated packs containing
@@ -146,6 +154,9 @@ To repeat the translation regression checks without overwriting the full matrix:
 python tools/run_matrix.py 1.8.8 1.12.2 1.21.11 26.3 --workers 4 --report docs/english-matrix-results.json
 python tools/package_release.py --report docs/english-matrix-results.json
 ```
+
+For the latest clickable-link build, use `--report docs/admin-link-matrix-results.json`
+for both `run_matrix.py` and `package_release.py` instead.
 
 Historical versions may require different JDKs, downloaded by `bootstrap.py`.
 The test accepts the EULA in its disposable `test-servers/` directories, downloads

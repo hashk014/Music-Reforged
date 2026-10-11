@@ -143,6 +143,8 @@ try:
             maps += 1
             mapid, _ = readvar(payload)
             print("CLIENT MAP", mapid, "packet-bytes=" + str(len(payload)), flush=True)
+        elif state == 'game' and name == 'system_chat' and b'open_url' in payload and b'/#token=' in payload:
+            print('CLIENT ADMINLINK OPEN_URL', flush=True)
         elif state == 'game' and name in ('sound', 'sound_entity'):
             print('CLIENT SOUND', name, 'packet-bytes=' + str(len(payload)), flush=True)
         elif state == 'game' and name == 'stop_sound':
