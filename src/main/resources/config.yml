@@ -1,0 +1,16 @@
+# Music Reforged — made by hash014
+max-stations: 250
+max-queue-size: 500
+default-radius: 64
+max-radius: 512
+default-volume: 1.0
+resource-pack:
+  # One pack is generated with the exact server resource-pack format.
+  # For public servers: host pack.zip on HTTPS, disable serve and set public-url.
+  serve: false
+  bind: 127.0.0.1
+  port: 8124
+  public-url: ''
+  send-on-join: false
+  join-delay-ticks: 40
+  max-audio-file-mb: 32

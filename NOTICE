@@ -1,0 +1,25 @@
+Music Reforged — made by hash014
+Copyright (C) 2026 hash014
+
+Functional rewrite of Music by Zombie_Striker.
+Original Music copyright (C) 2016 Zombie_Striker.
+Original source: https://github.com/ZombieStriker/Music
+Original checkout commit is recorded in docs/upstream.json.
+The supplied reference Music.jar is version 2.7.34; upstream is version 2.8.0.
+
+All plugin implementation classes were rewritten on 2026-10-11.
+Distributed under GNU GPL version 2 or later. See LICENSE.
+This software is distributed without warranty.
+
+The fifteen legacy demonstration OGG files under audio/minecraft are retained
+from the upstream repository, unmodified, with their original attribution.
+The three musicreforged demo loops are original generated assets by hash014;
+their preferred source form is tools/make_assets.py.
+
+Gson 2.11.0 is bundled and relocated, under the Apache License 2.0.
+Error Prone annotations 2.27.0 are bundled, under the Apache License 2.0.
+See licenses/ for third-party license text.
+Bukkit/Spigot is a provided dependency and is not bundled into this plugin.
+
+Test protocol helpers were adapted from hash014's local PixelPrinter Reforged
+tooling; they do not supply any part of the production music implementation.

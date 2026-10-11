@@ -1,0 +1,7 @@
+/.tools/
+/target/
+/test-servers/
+/upstream/
+/dist/
+__pycache__/
+*.log
