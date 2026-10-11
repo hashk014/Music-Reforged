@@ -46,17 +46,17 @@ public final class AmbientManager implements Listener {
     private long clock;
     private final Random random = new Random();
     public AmbientManager(MusicReforged p) { this.p = p; }
-    public static String key(String s) { if (s == null || !s.matches("[A-Za-z0-9_-]{1,64}")) throw new IllegalArgumentException("Identifiant : lettres, chiffres, - et _ (64 caracteres maximum)"); return s.toLowerCase(Locale.ROOT); }
+    public static String key(String s) { if (s == null || !s.matches("[A-Za-z0-9_-]{1,64}")) throw new IllegalArgumentException("Identifier: letters, digits, - and _ (maximum 64 characters)"); return s.toLowerCase(Locale.ROOT); }
     public Station playlist(String name) {
         for (Station s : p.state().stations.values()) if (String.valueOf(s.id).equals(name) || s.name.equalsIgnoreCase(name)) return s;
-        throw new IllegalArgumentException("Playlist inconnue: " + name);
+        throw new IllegalArgumentException("Unknown playlist: " + name);
     }
     public Station createPlaylist(String name, UUID owner) {
-        if (!name.matches("[A-Za-z0-9 _-]{1,80}")) throw new IllegalArgumentException("Nom de playlist invalide");
-        for (Station s : p.state().stations.values()) if (s.name.equalsIgnoreCase(name)) throw new IllegalArgumentException("Cette playlist existe deja");
+        if (!name.matches("[A-Za-z0-9 _-]{1,80}")) throw new IllegalArgumentException("Invalid playlist name");
+        for (Station s : p.state().stations.values()) if (s.name.equalsIgnoreCase(name)) throw new IllegalArgumentException("This playlist already exists");
         int max = p.getConfig().getInt("max-stations", 250), id = 0;
         while (p.state().stations.containsKey(id) && id < max) id++;
-        if (id == max) throw new IllegalArgumentException("Toutes les stations sont occupees");
+        if (id == max) throw new IllegalArgumentException("All station slots are occupied");
         Station s = new Station(id, owner); s.name = name; s.radius = p.getConfig().getInt("default-radius", 64);
         p.state().stations.put(id, s); p.persist(); return s;
     }
@@ -67,40 +67,40 @@ public final class AmbientManager implements Listener {
     }
     public Zone zone(String name, int station, UUID owner, Location a, Location b, int priority) {
         String id = key(name);
-        if (!a.getWorld().equals(b.getWorld())) throw new IllegalArgumentException("Les deux points doivent etre dans le meme monde");
+        if (!a.getWorld().equals(b.getWorld())) throw new IllegalArgumentException("Both points must be in the same world");
         return zone(id, station, owner, a.getWorld().getName(), a.getBlockX(), a.getBlockY(), a.getBlockZ(), b.getBlockX(), b.getBlockY(), b.getBlockZ(), priority);
     }
     public Zone zone(String name, int station, UUID owner, String world, int x1, int y1, int z1, int x2, int y2, int z2, int priority) {
-        String id = key(name); if (zones.containsKey(id)) throw new IllegalArgumentException("Cette zone existe deja");
-        if (!p.state().stations.containsKey(station)) throw new IllegalArgumentException("Station inconnue");
-        if (world == null || world.isEmpty() || world.length() > 128 || priority < 0 || priority > 1000) throw new IllegalArgumentException("Zone invalide");
-        for (int n : new int[] {x1,z1,x2,z2}) if (n < -30000000 || n > 30000000) throw new IllegalArgumentException("Coordonnees hors limite");
+        String id = key(name); if (zones.containsKey(id)) throw new IllegalArgumentException("This zone already exists");
+        if (!p.state().stations.containsKey(station)) throw new IllegalArgumentException("Unknown station");
+        if (world == null || world.isEmpty() || world.length() > 128 || priority < 0 || priority > 1000) throw new IllegalArgumentException("Invalid zone");
+        for (int n : new int[] {x1,z1,x2,z2}) if (n < -30000000 || n > 30000000) throw new IllegalArgumentException("Coordinates are out of bounds");
         Zone z = new Zone(); z.name = id; z.station = station; z.owner = owner; z.world = world; z.priority = priority;
         z.minX = Math.min(x1,x2); z.minY = Math.min(y1,y2); z.minZ = Math.min(z1,z2); z.maxX = Math.max(x1,x2); z.maxY = Math.max(y1,y2); z.maxZ = Math.max(z1,z2);
-        if (zones.size() >= 1000) throw new IllegalArgumentException("Limite de 1000 zones");
+        if (zones.size() >= 1000) throw new IllegalArgumentException("Limit of 1000 zones");
         zones.put(id,z); save(); return z;
     }
     public void selectedZone(Player player, String name, String station) {
         Location[] points = selections.get(player.getUniqueId());
-        if (points == null || points[0] == null || points[1] == null) throw new IllegalArgumentException("Selectionne les deux coins avec /music zone wand (clic gauche puis droit)");
+        if (points == null || points[0] == null || points[1] == null) throw new IllegalArgumentException("Select both corners with /music zone wand (left-click, then right-click)");
         zone(name, playlist(station).id, player.getUniqueId(), points[0], points[1], 30);
     }
     public Rule rule(String id, String event, String selector, int station, double seconds, int priority) {
         id = key(id); event = event.toUpperCase(Locale.ROOT);
-        if (!EVENTS.contains(event) || !p.state().stations.containsKey(station)) throw new IllegalArgumentException("Evenement ou station inconnu");
-        if (!Double.isFinite(seconds) || seconds < .25 || seconds > 3600 || priority < 0 || priority > 1000) throw new IllegalArgumentException("Duree ou priorite invalide");
-        if (selector == null || !selector.matches("[A-Za-z0-9_:*.-]{1,80}")) throw new IllegalArgumentException("Filtre invalide");
+        if (!EVENTS.contains(event) || !p.state().stations.containsKey(station)) throw new IllegalArgumentException("Unknown event or station");
+        if (!Double.isFinite(seconds) || seconds < .25 || seconds > 3600 || priority < 0 || priority > 1000) throw new IllegalArgumentException("Invalid duration or priority");
+        if (selector == null || !selector.matches("[A-Za-z0-9_:*.-]{1,80}")) throw new IllegalArgumentException("Invalid filter");
         Rule r = new Rule(); r.id = id; r.event = event; r.selector = selector.toUpperCase(Locale.ROOT); r.station = station; r.seconds = seconds; r.priority = priority;
-        if (!rules.containsKey(id) && rules.size() >= 1000) throw new IllegalArgumentException("Limite de 1000 regles");
+        if (!rules.containsKey(id) && rules.size() >= 1000) throw new IllegalArgumentException("Limit of 1000 rules");
         rules.put(id,r); save(); return r;
     }
     public Disc disc(String id, String track) {
         id = key(id); Track t = p.track(track); Disc d = new Disc(); d.id = id; d.track = t.id;
-        if (!discs.containsKey(id) && discs.size() >= 1000) throw new IllegalArgumentException("Limite de 1000 disques");
+        if (!discs.containsKey(id) && discs.size() >= 1000) throw new IllegalArgumentException("Limit of 1000 discs");
         discs.put(id,d); discStations.clear(); save(); return d;
     }
     public ItemStack discItem(String id) {
-        Disc d = discs.get(key(id)); if (d == null) throw new IllegalArgumentException("Disque inconnu");
+        Disc d = discs.get(key(id)); if (d == null) throw new IllegalArgumentException("Unknown disc");
         Material m = Material.matchMaterial("MUSIC_DISC_CAT"); if (m == null) m = Material.matchMaterial("GREEN_RECORD");
         if (m == null) m = Material.JUKEBOX;
         ItemStack item = new ItemStack(m); ItemMeta meta = item.getItemMeta(); meta.setDisplayName(ChatColor.AQUA + d.id + ChatColor.GRAY + " — Reforged");
@@ -144,8 +144,8 @@ public final class AmbientManager implements Listener {
     }
     public void clear(Player player) { leases.remove(player.getUniqueId()); selections.remove(player.getUniqueId()); radios.remove(player.getUniqueId()); }
     public void wand(Player player) {
-        ItemStack wand = new ItemStack(Material.STICK); ItemMeta meta = wand.getItemMeta(); meta.setDisplayName(ChatColor.AQUA + "Selection Music Reforged"); meta.setLore(Collections.singletonList(ChatColor.BLACK + "musicreforged:zone-wand")); wand.setItemMeta(meta);
-        give(player,wand); p.tell(player,"Clic gauche: premier coin. Clic droit: second coin. /music zone create <nom> <playlist>");
+        ItemStack wand = new ItemStack(Material.STICK); ItemMeta meta = wand.getItemMeta(); meta.setDisplayName(ChatColor.AQUA + "Music Reforged selection wand"); meta.setLore(Collections.singletonList(ChatColor.BLACK + "musicreforged:zone-wand")); wand.setItemMeta(meta);
+        give(player,wand); p.tell(player,"Left-click: first corner. Right-click: second corner. /music zone create <name> <playlist>");
     }
     public static void give(Player player, ItemStack item) { for (ItemStack extra : player.getInventory().addItem(item).values()) player.getWorld().dropItemNaturally(player.getLocation(),extra); }
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
@@ -156,20 +156,20 @@ public final class AmbientManager implements Listener {
         if (item != null && item.hasItemMeta() && item.getItemMeta().hasLore() && item.getItemMeta().getLore().contains(ChatColor.BLACK + "musicreforged:zone-wand")) {
             if (!p.admin(e.getPlayer())) return;
             int index = e.getAction() == Action.LEFT_CLICK_BLOCK ? 0 : e.getAction() == Action.RIGHT_CLICK_BLOCK ? 1 : -1; if (index < 0) return;
-            selections.computeIfAbsent(e.getPlayer().getUniqueId(), k -> new Location[2])[index] = e.getClickedBlock().getLocation(); e.setCancelled(true); p.tell(e.getPlayer(),"Coin " + (index+1) + " selectionne."); return;
+            selections.computeIfAbsent(e.getPlayer().getUniqueId(), k -> new Location[2])[index] = e.getClickedBlock().getLocation(); e.setCancelled(true); p.tell(e.getPlayer(),"Corner " + (index+1) + " selected."); return;
         }
         if (e.getAction() != Action.RIGHT_CLICK_BLOCK || e.getClickedBlock().getType() != Material.JUKEBOX) return;
         String id = discId(item); if (id == null) return;
         e.setCancelled(true);
         try {
-            if (!p.use(e.getPlayer())) throw new IllegalArgumentException("Permission insuffisante");
+            if (!p.use(e.getPlayer())) throw new IllegalArgumentException("Insufficient permission");
             RadioBox box = p.state().boxes.get(RadioBox.key(e.getClickedBlock().getLocation()));
-            if (box != null && !p.owns(e.getPlayer(),box.owner)) throw new IllegalArgumentException("Ce jukebox ne t'appartient pas");
-            if (box != null && box.disc != null) throw new IllegalArgumentException("Retire d'abord le disque avec /music disc eject en regardant ce jukebox");
+            if (box != null && !p.owns(e.getPlayer(),box.owner)) throw new IllegalArgumentException("You do not own this jukebox");
+            if (box != null && box.disc != null) throw new IllegalArgumentException("Eject the disc first with /music disc eject while looking at this jukebox");
             Location l = e.getClickedBlock().getLocation(); if (box == null) { box = new RadioBox(l.getWorld().getName(),l.getBlockX(),l.getBlockY(),l.getBlockZ(),e.getPlayer().getUniqueId()); p.state().boxes.put(box.key(),box); }
             box.disc = id; box.active = true; box.global = false; box.volume = 1; box.station = -1;
             if (e.getPlayer().getGameMode() != GameMode.CREATIVE) { ItemStack held = e.getPlayer().getItemInHand(); held.setAmount(held.getAmount()-1); e.getPlayer().setItemInHand(held.getAmount() <= 0 ? null : held); }
-            p.persist(); p.tell(e.getPlayer(),"Disque " + id + " insere.");
+            p.persist(); p.tell(e.getPlayer(),"Disc " + id + " inserted.");
         } catch (IllegalArgumentException ex) { p.tell(e.getPlayer(),ex.getMessage()); }
     }
     @EventHandler(priority=EventPriority.MONITOR,ignoreCancelled=true)
@@ -187,17 +187,17 @@ public final class AmbientManager implements Listener {
         for (Zone z:zones.values()) { String q="zones."+z.name+"."; y.set(q+"world",z.world);y.set(q+"owner",z.owner.toString());y.set(q+"station",z.station);y.set(q+"priority",z.priority); y.set(q+"bounds",Arrays.asList(z.minX,z.minY,z.minZ,z.maxX,z.maxY,z.maxZ)); }
         for (Rule r:rules.values()) { String q="rules."+r.id+".";y.set(q+"event",r.event);y.set(q+"selector",r.selector);y.set(q+"station",r.station);y.set(q+"seconds",r.seconds);y.set(q+"priority",r.priority); }
         for (Disc d:discs.values()) y.set("discs."+d.id,d.track);
-        try { AtomicFiles.write(p.getDataFolder().toPath().resolve("ambiences.yml"),y.saveToString()); } catch (IOException e) { throw new IllegalStateException("Sauvegarde des ambiances impossible",e); }
+        try { AtomicFiles.write(p.getDataFolder().toPath().resolve("ambiences.yml"),y.saveToString()); } catch (IOException e) { throw new IllegalStateException("Could not save ambiences",e); }
     }
     public void load() throws Exception {
         Path file=p.getDataFolder().toPath().resolve("ambiences.yml"); if (!Files.exists(file)) return;
-        YamlConfiguration y=new YamlConfiguration();y.load(file.toFile()); if (y.getInt("schema")!=1) throw new IOException("Schema ambiences.yml inconnu");
+        YamlConfiguration y=new YamlConfiguration();y.load(file.toFile()); if (y.getInt("schema")!=1) throw new IOException("Unknown ambiences.yml schema");
         Map<String,Zone> nextZones=new TreeMap<>();Map<String,Rule> nextRules=new TreeMap<>();Map<String,Disc> nextDiscs=new TreeMap<>();
         ConfigurationSection zs=y.getConfigurationSection("zones");if(zs!=null) for(String id:zs.getKeys(false)) {
-            ConfigurationSection c=zs.getConfigurationSection(id);List<Integer>b=c.getIntegerList("bounds");if(b.size()!=6)throw new IOException("Zone invalide: "+id);
-            Zone z=new Zone();z.name=key(id);z.world=c.getString("world");z.owner=UUID.fromString(c.getString("owner"));z.station=c.getInt("station");z.priority=c.getInt("priority",30);z.minX=b.get(0);z.minY=b.get(1);z.minZ=b.get(2);z.maxX=b.get(3);z.maxY=b.get(4);z.maxZ=b.get(5); if(z.world==null||z.minX>z.maxX||z.minY>z.maxY||z.minZ>z.maxZ)throw new IOException("Zone invalide: "+id);nextZones.put(z.name,z);
+            ConfigurationSection c=zs.getConfigurationSection(id);List<Integer>b=c.getIntegerList("bounds");if(b.size()!=6)throw new IOException("Invalid zone: "+id);
+            Zone z=new Zone();z.name=key(id);z.world=c.getString("world");z.owner=UUID.fromString(c.getString("owner"));z.station=c.getInt("station");z.priority=c.getInt("priority",30);z.minX=b.get(0);z.minY=b.get(1);z.minZ=b.get(2);z.maxX=b.get(3);z.maxY=b.get(4);z.maxZ=b.get(5); if(z.world==null||z.minX>z.maxX||z.minY>z.maxY||z.minZ>z.maxZ)throw new IOException("Invalid zone: "+id);nextZones.put(z.name,z);
         }
-        ConfigurationSection rs=y.getConfigurationSection("rules");if(rs!=null) for(String id:rs.getKeys(false)) { ConfigurationSection c=rs.getConfigurationSection(id);Rule r=new Rule();r.id=key(id);r.event=c.getString("event");r.selector=c.getString("selector","*");r.station=c.getInt("station");r.seconds=c.getDouble("seconds",12);r.priority=c.getInt("priority",70);if(!EVENTS.contains(r.event)||!Double.isFinite(r.seconds)||r.seconds<.25||r.seconds>3600)throw new IOException("Regle invalide: "+id);nextRules.put(r.id,r); }
+        ConfigurationSection rs=y.getConfigurationSection("rules");if(rs!=null) for(String id:rs.getKeys(false)) { ConfigurationSection c=rs.getConfigurationSection(id);Rule r=new Rule();r.id=key(id);r.event=c.getString("event");r.selector=c.getString("selector","*");r.station=c.getInt("station");r.seconds=c.getDouble("seconds",12);r.priority=c.getInt("priority",70);if(!EVENTS.contains(r.event)||!Double.isFinite(r.seconds)||r.seconds<.25||r.seconds>3600)throw new IOException("Invalid rule: "+id);nextRules.put(r.id,r); }
         ConfigurationSection ds=y.getConfigurationSection("discs");if(ds!=null)for(String id:ds.getKeys(false)){Disc d=new Disc();d.id=key(id);d.track=ds.getString(id);nextDiscs.put(d.id,d);}
         zones.clear();zones.putAll(nextZones);rules.clear();rules.putAll(nextRules);discs.clear();discs.putAll(nextDiscs);discStations.clear();
     }

@@ -13,12 +13,12 @@ public final class Track {
         this(id, sound, seconds, 0);
     }
     public Track(String id, String sound, double seconds, int segments) {
-        if (id == null || !id.matches("[A-Za-z0-9 _-]{1,80}")) throw new IllegalArgumentException("Nom de morceau invalide");
-        if (sound == null || !sound.matches("(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+") || sound.contains("..")) throw new IllegalArgumentException("Cle de son invalide");
-        if (!Double.isFinite(seconds) || seconds < .05 || seconds > 86400) throw new IllegalArgumentException("Duree: 0.05 a 86400 secondes");
+        if (id == null || !id.matches("[A-Za-z0-9 _-]{1,80}")) throw new IllegalArgumentException("Invalid track name");
+        if (sound == null || !sound.matches("(?:[a-z0-9_.-]+:)?[a-z0-9_./-]+") || sound.contains("..")) throw new IllegalArgumentException("Invalid sound key");
+        if (!Double.isFinite(seconds) || seconds < .05 || seconds > 86400) throw new IllegalArgumentException("Duration: 0.05 to 86400 seconds");
         this.id = id; this.sound = sound.indexOf(':') < 0 ? "minecraft:" + sound : sound; this.seconds = seconds;
         this.custom = !this.sound.startsWith("minecraft:music_disc.") && !this.sound.startsWith("minecraft:records.");
-        if (segments < 0 || segments > 14400) throw new IllegalArgumentException("Nombre de segments invalide");
+        if (segments < 0 || segments > 14400) throw new IllegalArgumentException("Invalid segment count");
         this.segments = segments;
     }
     public long ticks() { return (long) Math.ceil(seconds * 20); }

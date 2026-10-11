@@ -79,7 +79,7 @@ def test(version, toolcache):
             if phase=='player' and 'Hash014Test' in line and 'logged in with entity id' in line: send(p,'music playercheck Hash014Test');phase='checking-player'
             if 'PLAYERTEST PASS' in line:
                 result['playerChecks']=int(re.search(r'checks=(\d+)',line)[1]); result['status']='first-boot-passed';break
-            if any(s in line for s in ('CHECK FAIL','Ownership bypass','Initialisation impossible','Commande Music echouee','Could not pass event','generated an exception','NoSuchMethodError','IncompatibleClassChangeError')):
+            if any(s in line for s in ('CHECK FAIL','Ownership bypass','Initialization failed','Music command failed','Could not pass event','generated an exception','NoSuchMethodError','IncompatibleClassChangeError')):
                 result['status']='test-failed';break
     except Exception as e: result['status']='runner-failed';result['error']=repr(e)
     finally:
@@ -100,16 +100,16 @@ def test(version, toolcache):
                         continue
                     if 'Done (' in line:send(p,'music persistcheck')
                     if 'PERSISTENCE PASS' in line:result['restartChecks']=int(re.search(r'checks=(\d+)',line)[1]);result['status']='passed';break
-                    if 'CHECK FAIL' in line or 'Initialisation impossible' in line:result['status']='restart-test-failed';break
+                    if 'CHECK FAIL' in line or 'Initialization failed' in line:result['status']='restart-test-failed';break
                 else:result['status']='restart-timeout'
             finally:stop(p,thread)
     (folder/'reforged-test.log').write_text(''.join(all_log),encoding='utf-8')
     result['seconds']=round(time.monotonic()-started,1)
-    result['failures']=[line.strip() for line in all_log if any(s in line for s in ['CHECK FAIL','Initialisation impossible','Commande Music echouee','Could not pass event','IncompatibleClassChangeError','NoSuchMethodError'])]
+    result['failures']=[line.strip() for line in all_log if any(s in line for s in ['CHECK FAIL','Initialization failed','Music command failed','Could not pass event','IncompatibleClassChangeError','NoSuchMethodError'])]
     return result
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('versions',nargs='*');parser.add_argument('--all',action='store_true');parser.add_argument('--workers',type=int,default=3);parser.add_argument('--tool-cache',default=str(ROOT/'.tools'));a=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('versions',nargs='*');parser.add_argument('--all',action='store_true');parser.add_argument('--workers',type=int,default=3);parser.add_argument('--tool-cache',default=str(ROOT/'.tools'));parser.add_argument('--report',default='docs/matrix-results.json');a=parser.parse_args()
     versions=a.versions or [p.name for p in (ROOT/'test-servers').iterdir() if p.is_dir() and re.fullmatch(r'(?:1\.\d+(?:\.\d+)?|26\.\d+(?:\.\d+)?)',p.name)]
     report={'date':datetime.now(timezone.utc).isoformat(),'jarSha256':hashlib.sha256(JAR.read_bytes()).hexdigest(),'results':[]}
     with concurrent.futures.ThreadPoolExecutor(max_workers=a.workers) as ex:
@@ -118,5 +118,5 @@ if __name__=='__main__':
             try:r=f.result()
             except Exception as e:r={'version':fs[f],'status':'runner-failed','error':repr(e)}
             report['results'].append(r);print(json.dumps(r),flush=True)
-            (ROOT/'docs').mkdir(exist_ok=True);(ROOT/'docs/matrix-results.json').write_text(json.dumps(report,indent=2),encoding='utf-8')
+            report_path=ROOT/a.report;report_path.parent.mkdir(parents=True,exist_ok=True);report_path.write_text(json.dumps(report,indent=2),encoding='utf-8')
     if any(r['status']!='passed' for r in report['results']):sys.exit(1)

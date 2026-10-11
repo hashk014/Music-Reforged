@@ -30,8 +30,8 @@ public final class Library {
     private void createIfAbsent(Track t) throws IOException { if (!Files.exists(directory.resolve(t.id + ".txt"))) create(t); }
     public void create(Track track) throws IOException {
         Path file = directory.resolve(track.id + ".txt").normalize();
-        if (!file.getParent().equals(directory.normalize())) throw new IllegalArgumentException("Chemin invalide");
-        if (Files.exists(file)) throw new IllegalArgumentException("Ce morceau existe deja");
+        if (!file.getParent().equals(directory.normalize())) throw new IllegalArgumentException("Invalid path");
+        if (Files.exists(file)) throw new IllegalArgumentException("This track already exists");
         AtomicFiles.write(file, "# Music Reforged — made by hash014\nTime:" + track.seconds + "\nSoundname:" + track.sound + "\nSegments:" + track.segments + "\n");
     }
     public Map<String, Track> load() throws IOException {
@@ -42,9 +42,9 @@ public final class Library {
                 if (id.startsWith("[TEMPLATE")) continue;
                 try {
                     Track t = parse(id, Files.readAllLines(f, StandardCharsets.UTF_8));
-                    if (result.containsKey(t.key())) throw new IllegalArgumentException("Nom duplique (casse ignoree)");
+                    if (result.containsKey(t.key())) throw new IllegalArgumentException("Duplicate name (case-insensitive)");
                     result.put(t.key(), t);
-                } catch (IllegalArgumentException e) { throw new IOException("Morceau invalide " + f.getFileName() + ": " + e.getMessage(), e); }
+                } catch (IllegalArgumentException e) { throw new IOException("Invalid track " + f.getFileName() + ": " + e.getMessage(), e); }
             }
         }
         return result;

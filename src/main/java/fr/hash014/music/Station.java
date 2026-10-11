@@ -15,7 +15,7 @@ public final class Station {
     private long remaining, generation;
     private Track current;
     public Station(int id, UUID owner) {
-        if (id < 0 || owner == null) throw new IllegalArgumentException("Station invalide");
+        if (id < 0 || owner == null) throw new IllegalArgumentException("Invalid station");
         this.id = id; this.owner = owner;
         this.name = "Station " + id;
     }

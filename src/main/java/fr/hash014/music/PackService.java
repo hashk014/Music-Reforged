@@ -31,7 +31,7 @@ public final class PackService implements AutoCloseable {
             JsonArray files = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonArray();
             for (JsonElement el : files) {
                 String name = el.getAsString(); Path out = audio.resolve(name).normalize();
-                if (!out.startsWith(audio)) throw new IOException("Chemin audio invalide");
+                if (!out.startsWith(audio)) throw new IOException("Invalid audio path");
                 if (!Files.exists(out)) {
                     Files.createDirectories(out.getParent());
                     try (InputStream sound = plugin.getResource("audio/" + name)) { Files.copy(sound, out); }
@@ -57,7 +57,7 @@ public final class PackService implements AutoCloseable {
         String version = Bukkit.getBukkitVersion().split("-")[0];
         try (InputStream in = plugin.getResource("pack-formats.json")) {
             JsonObject formats = JsonParser.parseReader(new InputStreamReader(in, StandardCharsets.UTF_8)).getAsJsonObject();
-            if (!formats.has(version)) throw new IOException("Format de pack inconnu pour " + version);
+            if (!formats.has(version)) throw new IOException("Unknown pack format for " + version);
             JsonArray f = formats.getAsJsonArray(version); major = f.get(0).getAsInt(); minor = f.get(1).getAsInt();
         }
     }
@@ -79,13 +79,13 @@ public final class PackService implements AutoCloseable {
             entry(zip, "NOTICE.txt", "Music Reforged — made by hash014. GPL-2.0-or-later. Legacy samples from ZombieStriker/Music; see source NOTICE.\n".getBytes(StandardCharsets.UTF_8));
             long total = 0;
             for (Path file : files) {
-                Path real = file.toRealPath(); if (!real.startsWith(audio.toRealPath())) throw new IOException("Audio hors du dossier: " + file);
+                Path real = file.toRealPath(); if (!real.startsWith(audio.toRealPath())) throw new IOException("Audio is outside its directory: " + file);
                 long size = Files.size(file); total += size;
-                if (size > maxFile || total > 64L * 1024 * 1024) throw new IOException("Pack audio trop volumineux (maximum 64 Mo)");
+                if (size > maxFile || total > 64L * 1024 * 1024) throw new IOException("Audio pack is too large (maximum 64 MB)");
                 String name = audio.relativize(file).toString().replace('\\', '/');
-                if (!name.matches("[a-z0-9_.-]+/[a-z0-9_./-]+\\.ogg") || name.contains("..")) throw new IOException("Nom OGG invalide: " + name);
+                if (!name.matches("[a-z0-9_.-]+/[a-z0-9_./-]+\\.ogg") || name.contains("..")) throw new IOException("Invalid OGG filename: " + name);
                 byte[] content = Files.readAllBytes(file);
-                if (content.length < 4 || content[0] != 'O' || content[1] != 'g' || content[2] != 'g' || content[3] != 'S') throw new IOException("Ce fichier n'est pas OGG: " + name);
+                if (content.length < 4 || content[0] != 'O' || content[1] != 'g' || content[2] != 'g' || content[3] != 'S') throw new IOException("This file is not OGG: " + name);
                 int slash = name.indexOf('/'); String ns = name.substring(0, slash), path = name.substring(slash + 1, name.length() - 4);
                 JsonObject sound = new JsonObject(), soundFile = new JsonObject(); JsonArray list = new JsonArray();
                 soundFile.addProperty("name", ns + ":" + path); soundFile.addProperty("stream", true); list.add(soundFile);
@@ -98,14 +98,14 @@ public final class PackService implements AutoCloseable {
         Path temp = Files.createTempFile(out.getParent(), "pack-", ".tmp");
         try { Files.write(temp, candidate); AtomicFiles.move(temp, out); } finally { Files.deleteIfExists(temp); }
         hash = sha; pack = candidate;
-        plugin.getLogger().info("Pack audio genere: format " + major + "." + minor + ", " + files.size() + " sons, SHA-1 " + sha1());
+        plugin.getLogger().info("Audio pack generated: format " + major + "." + minor + ", " + files.size() + " sounds, SHA-1 " + sha1());
     }
     private static void entry(ZipOutputStream zip, String name, byte[] data) throws IOException {
         ZipEntry e = new ZipEntry(name); e.setTime(0); zip.putNextEntry(e); zip.write(data); zip.closeEntry();
     }
     private void start() throws IOException {
         String host = plugin.getConfig().getString("resource-pack.bind", "127.0.0.1"); int port = plugin.getConfig().getInt("resource-pack.port", 8124);
-        if (port < 1 || port > 65535) throw new IOException("Port de pack invalide");
+        if (port < 1 || port > 65535) throw new IOException("Invalid pack port");
         http = HttpServer.create(new InetSocketAddress(host, port), 16);
         executor = new ThreadPoolExecutor(2, 2, 0L, TimeUnit.MILLISECONDS, new ArrayBlockingQueue<Runnable>(16), r -> { Thread t = new Thread(r, "MusicReforged-Pack"); t.setDaemon(true); return t; });
         http.setExecutor(executor);
@@ -122,7 +122,7 @@ public final class PackService implements AutoCloseable {
                 if (method.equals("GET")) exchange.getResponseBody().write(data);
             } finally { exchange.close(); }
         });
-        http.start(); plugin.getLogger().info("Pack HTTP actif sur " + host + ":" + port + "/pack.zip");
+        http.start(); plugin.getLogger().info("Pack HTTP server listening on " + host + ":" + port + "/pack.zip");
     }
     public String url() {
         String u = plugin.getConfig().getString("resource-pack.public-url", "").trim();
@@ -133,18 +133,18 @@ public final class PackService implements AutoCloseable {
         }
         if (u.isEmpty() && plugin.administration() != null && !plugin.administration().baseUrl().isEmpty()) u = plugin.administration().baseUrl() + "/pack.zip";
         if (u.isEmpty()) return "";
-        try { URI uri = new URI(u); if ((!uri.getScheme().equalsIgnoreCase("http") && !uri.getScheme().equalsIgnoreCase("https")) || uri.getHost() == null) throw new IllegalArgumentException("URL du pack invalide"); }
-        catch (URISyntaxException | NullPointerException e) { throw new IllegalArgumentException("URL du pack invalide", e); }
+        try { URI uri = new URI(u); if ((!uri.getScheme().equalsIgnoreCase("http") && !uri.getScheme().equalsIgnoreCase("https")) || uri.getHost() == null) throw new IllegalArgumentException("Invalid pack URL"); }
+        catch (URISyntaxException | NullPointerException e) { throw new IllegalArgumentException("Invalid pack URL", e); }
         return u;
     }
     public void send(Player p) {
         String u = url();
-        if (u.isEmpty()) { plugin.tell(p, "Pack pret dans plugins/MusicReforged/pack.zip. Configure resource-pack.public-url ou serve."); return; }
+        if (u.isEmpty()) { plugin.tell(p, "Pack ready at plugins/MusicReforged/pack.zip. Configure resource-pack.public-url or serve."); return; }
         String versioned = u + (u.contains("?") ? "&" : "?") + "v=" + sha1();
         try { Player.class.getMethod("setResourcePack", String.class, byte[].class).invoke(p, versioned, hash.clone()); }
         catch (NoSuchMethodException e) { p.setResourcePack(versioned); }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException("Envoi du pack impossible", e); }
-        plugin.tell(p, "Pack audio propose. Accepte-le pour entendre les morceaux personnalises.");
+        catch (ReflectiveOperationException e) { throw new IllegalStateException("Could not send the pack", e); }
+        plugin.tell(p, "Audio pack sent. Accept it to hear custom tracks.");
     }
     @Override public void close() { if (http != null) { http.stop(0); http = null; } if (executor != null) { executor.shutdownNow(); executor = null; } }
 }

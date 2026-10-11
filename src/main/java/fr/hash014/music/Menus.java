@@ -37,28 +37,28 @@ public final class Menus implements Listener {
             Object v = values.get(n); int slot = n % 45;
             if (v instanceof Track) {
                 Track t = (Track) v; menu.items.add(t.id);
-                menu.inventory.setItem(slot, item("MUSIC_DISC_CAT", t.id, ChatColor.GRAY + "Duree : " + t.seconds + " s", "Clic : ecouter", t.custom ? "Necessite le pack audio" : "Son Minecraft inclus"));
+                menu.inventory.setItem(slot, item("MUSIC_DISC_CAT", t.id, ChatColor.GRAY + "Duration: " + t.seconds + " s", "Click: listen", t.custom ? "Requires the audio pack" : "Built-in Minecraft sound"));
             } else {
                 Station s = (Station) v; menu.items.add(String.valueOf(s.id));
-                menu.inventory.setItem(slot, item("JUKEBOX", "Station " + s.id, s.queue.size() + " morceaux", "Rayon : " + s.radius + " blocs", s.paused ? "En pause" : "Clic : choisir cette station"));
+                menu.inventory.setItem(slot, item("JUKEBOX", "Station " + s.id, s.queue.size() + " tracks", "Radius: " + s.radius + " blocks", s.paused ? "Paused" : "Click: select this station"));
             }
         }
-        menu.inventory.setItem(45, item("ARROW", "Page precedente"));
-        menu.inventory.setItem(46, item("NOTE_BLOCK", box == null ? "Volume personnel" : "Volume : " + box.volume, "Ajuster avec - et +"));
+        menu.inventory.setItem(45, item("ARROW", "Previous page"));
+        menu.inventory.setItem(46, item("NOTE_BLOCK", box == null ? "Personal volume" : "Volume: " + box.volume, "Adjust with - and +"));
         menu.inventory.setItem(47, item("REDSTONE", "Volume -"));
         menu.inventory.setItem(48, item("GLOWSTONE_DUST", "Volume +"));
-        menu.inventory.setItem(49, item("BARRIER", box == null ? "Couper mon audio" : "Eteindre le jukebox"));
-        menu.inventory.setItem(50, item("COMPASS", box == null ? "Reactiver mon audio" : (box.global ? "Mode global actif" : "Mode local actif"), "Clic : changer de mode"));
-        menu.inventory.setItem(51, item("BOOK", "Obtenir le pack audio"));
-        menu.inventory.setItem(52, item("ARROW", "Page suivante"));
-        menu.inventory.setItem(53, item("OAK_DOOR", "Fermer", "made by hash014"));
+        menu.inventory.setItem(49, item("BARRIER", box == null ? "Mute my audio" : "Turn off the jukebox"));
+        menu.inventory.setItem(50, item("COMPASS", box == null ? "Unmute my audio" : (box.global ? "Global mode active" : "Local mode active"), "Click: change mode"));
+        menu.inventory.setItem(51, item("BOOK", "Get the audio pack"));
+        menu.inventory.setItem(52, item("ARROW", "Next page"));
+        menu.inventory.setItem(53, item("OAK_DOOR", "Close", "made by hash014"));
         p.openInventory(menu.inventory);
     }
     public void requireBox(Player p, RadioBox b) {
-        if (plugin.state().boxes.get(b.key()) != b) throw new IllegalArgumentException("Ce jukebox n'existe plus");
-        if (!plugin.owns(p, b.owner)) throw new IllegalArgumentException("Ce jukebox ne t'appartient pas");
+        if (plugin.state().boxes.get(b.key()) != b) throw new IllegalArgumentException("This jukebox no longer exists");
+        if (!plugin.owns(p, b.owner)) throw new IllegalArgumentException("You do not own this jukebox");
         Location loc = b.location();
-        if (loc == null || !loc.getWorld().equals(p.getWorld()) || loc.distanceSquared(p.getLocation()) > 144 || loc.getBlock().getType() != Material.JUKEBOX) throw new IllegalArgumentException("Approche-toi du jukebox");
+        if (loc == null || !loc.getWorld().equals(p.getWorld()) || loc.distanceSquared(p.getLocation()) > 144 || loc.getBlock().getType() != Material.JUKEBOX) throw new IllegalArgumentException("Move closer to the jukebox");
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void place(BlockPlaceEvent e) {
@@ -68,12 +68,12 @@ public final class Menus implements Listener {
         RadioBox b = new RadioBox(l.getWorld().getName(), l.getBlockX(), l.getBlockY(), l.getBlockZ(), e.getPlayer().getUniqueId());
         b.volume = (float) plugin.getConfig().getDouble("default-volume", 1);
         plugin.state().boxes.put(b.key(), b); plugin.persist();
-        plugin.tell(e.getPlayer(), "Radio-jukebox pose. Clic droit pour choisir une station.");
+        plugin.tell(e.getPlayer(), "Radio jukebox placed. Right-click to select a station.");
     }
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void breakProtection(BlockBreakEvent e) {
         RadioBox b = plugin.state().boxes.get(RadioBox.key(e.getBlock().getLocation()));
-        if (b != null && !plugin.owns(e.getPlayer(), b.owner)) { e.setCancelled(true); plugin.tell(e.getPlayer(), "Ce jukebox ne t'appartient pas."); }
+        if (b != null && !plugin.owns(e.getPlayer(), b.owner)) { e.setCancelled(true); plugin.tell(e.getPlayer(), "You do not own this jukebox."); }
     }
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void broken(BlockBreakEvent e) {
@@ -92,7 +92,7 @@ public final class Menus implements Listener {
         catch (ReflectiveOperationException ignored) { }
         RadioBox b = plugin.state().boxes.get(RadioBox.key(e.getClickedBlock().getLocation())); if (b == null) return;
         e.setCancelled(true);
-        try { if (!plugin.use(e.getPlayer()) || !e.getPlayer().hasPermission("music.usejukebox")) throw new IllegalArgumentException("Permission insuffisante"); open(e.getPlayer(), b, 0); }
+        try { if (!plugin.use(e.getPlayer()) || !e.getPlayer().hasPermission("music.usejukebox")) throw new IllegalArgumentException("Insufficient permission"); open(e.getPlayer(), b, 0); }
         catch (IllegalArgumentException ex) { plugin.tell(e.getPlayer(), ex.getMessage()); }
     }
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -103,17 +103,17 @@ public final class Menus implements Listener {
         Player p = (Player) e.getWhoClicked(); Menu m = (Menu) e.getView().getTopInventory().getHolder(); int slot = e.getRawSlot();
         if (slot < 0 || slot >= 54) return;
         try {
-            if (!plugin.use(p)) throw new IllegalArgumentException("Permission insuffisante");
+            if (!plugin.use(p)) throw new IllegalArgumentException("Insufficient permission");
             RadioBox b = m.box == null ? null : plugin.state().boxes.get(m.box);
-            if (m.box != null) { if (b == null) throw new IllegalArgumentException("Jukebox supprime"); requireBox(p, b); }
+            if (m.box != null) { if (b == null) throw new IllegalArgumentException("Jukebox removed"); requireBox(p, b); }
             if (slot < m.items.size()) {
                 if (b == null) plugin.engine().once(p, plugin.track(m.items.get(slot)));
                 else {
-                    if (!p.hasPermission("music.changesong")) throw new IllegalArgumentException("Permission insuffisante");
+                    if (!p.hasPermission("music.changesong")) throw new IllegalArgumentException("Insufficient permission");
                     int id = Integer.parseInt(m.items.get(slot));
-                    if (b.disc != null) throw new IllegalArgumentException("Retire le disque avec /music disc eject avant de choisir une station");
-                    if (!plugin.state().stations.containsKey(id)) throw new IllegalArgumentException("Station supprimee");
-                    b.station = id; b.active = true; plugin.persist(); plugin.tell(p, "Station " + id + " selectionnee.");
+                    if (b.disc != null) throw new IllegalArgumentException("Eject the disc with /music disc eject before selecting a station");
+                    if (!plugin.state().stations.containsKey(id)) throw new IllegalArgumentException("Station removed");
+                    b.station = id; b.active = true; plugin.persist(); plugin.tell(p, "Station " + id + " selected.");
                 }
             } else if (slot == 45) { open(p, b, m.page - 1); return; }
             else if (slot == 52) { open(p, b, m.page + 1); return; }
@@ -123,12 +123,12 @@ public final class Menus implements Listener {
                 if (b != null) b.active = false; else { plugin.state().preferences.put(p.getUniqueId(), 0f); plugin.engine().stop(p); }
                 plugin.persist();
             } else if (slot == 50) {
-                if (b != null) { if (!plugin.global(p)) throw new IllegalArgumentException("Permission de diffusion globale requise"); b.global = !b.global; }
+                if (b != null) { if (!plugin.global(p)) throw new IllegalArgumentException("Global broadcast permission required"); b.global = !b.global; }
                 else plugin.state().preferences.put(p.getUniqueId(), 1f);
                 plugin.persist();
             } else if (slot == 47 || slot == 48) {
                 if (b != null) {
-                    if (!p.hasPermission("music.changevolume")) throw new IllegalArgumentException("Permission insuffisante");
+                    if (!p.hasPermission("music.changevolume")) throw new IllegalArgumentException("Insufficient permission");
                     b.volume = Math.max(0, Math.min(10, Math.round((b.volume + (slot == 47 ? -.1f : .1f)) * 10) / 10f));
                 } else {
                     float v = plugin.state().preferences.getOrDefault(p.getUniqueId(), 1f);
@@ -151,7 +151,7 @@ public final class Menus implements Listener {
     }
     @EventHandler public void packStatus(PlayerResourcePackStatusEvent e) {
         String status = e.getStatus().name();
-        if (status.equals("SUCCESSFULLY_LOADED")) { plugin.engine().stop(e.getPlayer()); plugin.tell(e.getPlayer(), "Pack audio charge."); }
-        else if (status.equals("DECLINED") || status.startsWith("FAILED")) plugin.tell(e.getPlayer(), "Pack non charge. Les morceaux personnalises resteront silencieux; les disques Minecraft fonctionnent.");
+        if (status.equals("SUCCESSFULLY_LOADED")) { plugin.engine().stop(e.getPlayer()); plugin.tell(e.getPlayer(), "Audio pack loaded."); }
+        else if (status.equals("DECLINED") || status.startsWith("FAILED")) plugin.tell(e.getPlayer(), "Pack not loaded. Custom tracks will remain silent; Minecraft discs still work.");
     }
 }

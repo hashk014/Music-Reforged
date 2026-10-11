@@ -34,7 +34,7 @@ def run(toolcache=None):
                     continue
                 if 'Done (' in line:p.stdin.write('music migrationcheck\n');p.stdin.flush()
                 if 'MIGRATION PASS' in line:result[phase]=True;break
-                if 'Initialisation impossible' in line or 'CHECK FAIL' in line:break
+                if 'Initialization failed' in line or 'CHECK FAIL' in line:break
         finally:
             if p.poll() is None:
                 p.stdin.write('stop\n');p.stdin.flush()

@@ -17,37 +17,37 @@ public final class StateStore {
     public void load() throws Exception {
         if (!Files.exists(file)) return;
         YamlConfiguration y = new YamlConfiguration(); y.load(file.toFile());
-        if (y.getInt("schema") != 1) throw new IOException("Version de state.yml inconnue");
+        if (y.getInt("schema") != 1) throw new IOException("Unknown state.yml version");
         ConfigurationSection ss = y.getConfigurationSection("stations");
         if (ss != null) for (String key : ss.getKeys(false)) {
             ConfigurationSection s = ss.getConfigurationSection(key);
-            if (s == null) throw new IOException("Station illisible: " + key);
+            if (s == null) throw new IOException("Could not read station: " + key);
             Station station = new Station(Integer.parseInt(key), UUID.fromString(s.getString("owner")));
             station.name = s.getString("name", "Station " + station.id);
             for (String id : s.getStringList("queue")) {
-                if (!id.matches("[A-Za-z0-9 _-]{1,80}")) throw new IOException("Morceau invalide: " + id);
+                if (!id.matches("[A-Za-z0-9 _-]{1,80}")) throw new IOException("Invalid track: " + id);
                 station.queue.add(id);
             }
             station.radius = s.getInt("radius", 64);
-            if (station.radius < 1 || station.radius > 4096 || station.queue.size() > 10000) throw new IOException("Limites de station invalides");
+            if (station.radius < 1 || station.radius > 4096 || station.queue.size() > 10000) throw new IOException("Invalid station limits");
             station.shuffle = s.getBoolean("shuffle"); station.paused = s.getBoolean("paused");
             stations.put(station.id, station);
         }
         ConfigurationSection bs = y.getConfigurationSection("jukeboxes");
         if (bs != null) for (String key : bs.getKeys(false)) {
             ConfigurationSection b = bs.getConfigurationSection(key);
-            if (b == null) throw new IOException("Jukebox illisible: " + key);
+            if (b == null) throw new IOException("Could not read jukebox: " + key);
             RadioBox box = new RadioBox(b.getString("world"), b.getInt("x"), b.getInt("y"), b.getInt("z"), UUID.fromString(b.getString("owner")));
             box.station = b.getInt("station", -1); box.volume = (float) b.getDouble("volume", 1);
-            if (!Float.isFinite(box.volume) || box.volume < 0 || box.volume > 10) throw new IOException("Volume jukebox invalide");
+            if (!Float.isFinite(box.volume) || box.volume < 0 || box.volume > 10) throw new IOException("Invalid jukebox volume");
             box.global = b.getBoolean("global"); box.active = b.getBoolean("active");
             box.disc = b.getString("disc");
-            if (boxes.put(box.key(), box) != null) throw new IOException("Jukebox duplique: " + box.key());
+            if (boxes.put(box.key(), box) != null) throw new IOException("Duplicate jukebox: " + box.key());
         }
         ConfigurationSection ps = y.getConfigurationSection("players");
         if (ps != null) for (String key : ps.getKeys(false)) {
             float volume = (float) ps.getDouble(key);
-            if (!Float.isFinite(volume) || volume < 0 || volume > 1) throw new IOException("Volume personnel invalide");
+            if (!Float.isFinite(volume) || volume < 0 || volume > 1) throw new IOException("Invalid personal volume");
             preferences.put(UUID.fromString(key), volume);
         }
     }

@@ -16,7 +16,7 @@ public final class RadioBox {
     public boolean active, global;
     public String disc;
     public RadioBox(String world, int x, int y, int z, UUID owner) {
-        if (world == null || world.isEmpty() || owner == null) throw new IllegalArgumentException("Jukebox invalide");
+        if (world == null || world.isEmpty() || owner == null) throw new IllegalArgumentException("Invalid jukebox");
         this.world = world; this.x = x; this.y = y; this.z = z; this.owner = owner;
     }
     public static String key(Location l) { return key(l.getWorld().getName(), l.getBlockX(), l.getBlockY(), l.getBlockZ()); }

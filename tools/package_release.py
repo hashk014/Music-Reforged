@@ -1,4 +1,5 @@
 """Package the tested JAR and complete corresponding sources without local server data."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -24,8 +25,12 @@ def archive(path, entries):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--report', default='docs/matrix-results.json', help='Successful runtime report identifying the built JAR')
+    args = parser.parse_args()
     jar = ROOT / 'target' / f'{NAME}.jar'
-    report = json.loads((ROOT / 'docs/matrix-results.json').read_text(encoding='utf-8'))
+    report_path = ROOT / args.report
+    report = json.loads(report_path.read_text(encoding='utf-8'))
     if not jar.exists():
         raise SystemExit('Build first: ./build.ps1 or mvn clean verify')
     if digest(jar) != report['jarSha256']:
@@ -52,6 +57,8 @@ def main():
         entries.append((ROOT / name, name))
     entries.extend((source, source.relative_to(ROOT).as_posix())
                    for source in (ROOT / 'licenses').rglob('*') if source.is_file())
+    if report_path != ROOT / 'docs/matrix-results.json':
+        entries.append((report_path, report_path.relative_to(ROOT).as_posix()))
     archive(distribution, entries)
     artifacts = (shipped, source_zip, distribution)
     (destination / 'SHA256SUMS.txt').write_text(

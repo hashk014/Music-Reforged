@@ -13,12 +13,12 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 final class LegacyImporter {
     static UUID owner(String text) {
-        if (text == null || text.trim().isEmpty()) throw new IllegalArgumentException("Ancien proprietaire manquant");
+        if (text == null || text.trim().isEmpty()) throw new IllegalArgumentException("Missing legacy owner");
         try { return UUID.fromString(text); }
         catch (IllegalArgumentException e) {
             // Only an existing cached identity is trusted on an online-mode server.
             for (OfflinePlayer p : Bukkit.getOfflinePlayers()) if (text.equalsIgnoreCase(p.getName())) return p.getUniqueId();
-            if (Bukkit.getOnlineMode()) throw new IllegalArgumentException("Ancien proprietaire inconnu: " + text + "; utiliser une UUID dans la copie de config");
+            if (Bukkit.getOnlineMode()) throw new IllegalArgumentException("Unknown legacy owner: " + text + "; use a UUID in the configuration copy");
             return UUID.nameUUIDFromBytes(("OfflinePlayer:" + text).getBytes(StandardCharsets.UTF_8));
         }
     }
@@ -35,7 +35,7 @@ final class LegacyImporter {
         ConfigurationSection loops = y.getConfigurationSection("Loop");
         if (loops != null) for (String key : loops.getKeys(false)) {
             if (!key.matches("[0-9]+")) continue;
-            ConfigurationSection c = loops.getConfigurationSection(key); if (c == null) throw new IllegalArgumentException("Ancienne station illisible: " + key);
+            ConfigurationSection c = loops.getConfigurationSection(key); if (c == null) throw new IllegalArgumentException("Could not read legacy station: " + key);
             Station s = new Station(Integer.parseInt(key), owner(c.getString("p", "")));
             Object songs = c.get("s");
             if (songs instanceof String) s.queue.add((String) songs); else s.queue.addAll(c.getStringList("s"));
@@ -48,12 +48,12 @@ final class LegacyImporter {
             Object loc = c.get("location");
             String world; int x, yy, z;
             if (loc instanceof Location) {
-                Location l = (Location) loc; if (l.getWorld() == null) throw new IllegalArgumentException("Monde manquant: " + key);
+                Location l = (Location) loc; if (l.getWorld() == null) throw new IllegalArgumentException("Missing world: " + key);
                 world = l.getWorld().getName(); x = l.getBlockX(); yy = l.getBlockY(); z = l.getBlockZ();
             } else if (c.isConfigurationSection("location")) {
                 ConfigurationSection l = c.getConfigurationSection("location"); world = l.getString("world");
                 x = l.getInt("x"); yy = l.getInt("y"); z = l.getInt("z");
-            } else throw new IllegalArgumentException("Ancien jukebox illisible: " + key);
+            } else throw new IllegalArgumentException("Could not read legacy jukebox: " + key);
             RadioBox b = new RadioBox(world, x, yy, z, owner(c.getString("owner", "")));
             int v = c.getInt("volume", 5); b.volume = Math.min(10, Math.max(0, v)); b.global = v == -1;
             if (b.global) b.volume = 1;
@@ -72,7 +72,7 @@ final class LegacyImporter {
         }
         store.save();
         AtomicFiles.write(target.resolve("migration-complete"), "Imported from Music; original files unchanged.\nBackup: " + backup + "\n");
-        plugin.getLogger().info("Ancien Music importe: " + store.stations.size() + " stations, " + store.boxes.size() + " jukeboxes. Sauvegarde: " + backup);
+        plugin.getLogger().info("Legacy Music imported: " + store.stations.size() + " stations, " + store.boxes.size() + " jukeboxes. Backup: " + backup);
         return true;
     }
 }

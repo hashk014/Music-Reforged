@@ -31,11 +31,11 @@ public final class SoundBridge {
         try {
             if (play != null) play.invoke(p, at, sound(t), records, volume, 1f);
             else p.playSound(at, sound(t), volume, 1f);
-        } catch (ReflectiveOperationException e) { throw new IllegalStateException("Envoi du son impossible", e); }
+        } catch (ReflectiveOperationException e) { throw new IllegalStateException("Could not send the sound", e); }
     }
     public void stop(Player p, Track t) {
         if (stop == null) return;
         try { if (stop.getParameterTypes().length == 1) stop.invoke(p, sound(t)); else stop.invoke(p, sound(t), records); }
-        catch (ReflectiveOperationException e) { throw new IllegalStateException("Arret du son impossible", e); }
+        catch (ReflectiveOperationException e) { throw new IllegalStateException("Could not stop the sound", e); }
     }
 }

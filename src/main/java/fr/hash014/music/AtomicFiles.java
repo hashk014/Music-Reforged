@@ -23,7 +23,7 @@ final class AtomicFiles {
             } catch (AccessDeniedException e) {
                 if (attempt >= 5) throw e;
                 try { Thread.sleep(Math.min(80, 10L << attempt)); }
-                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IOException("Sauvegarde interrompue", interrupted); }
+                catch (InterruptedException interrupted) { Thread.currentThread().interrupt(); throw new IOException("Save interrupted", interrupted); }
             }
         }
     }

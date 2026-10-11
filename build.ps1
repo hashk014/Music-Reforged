@@ -14,5 +14,5 @@ if (-not $Maven) {
 }
 if (-not $Maven) { $Maven = 'mvn.cmd' }
 & $Maven clean verify
-if ($LASTEXITCODE -ne 0) { throw "Maven a echoue: $LASTEXITCODE" }
-Write-Host 'Pret: target\Music-Reforged-1.0.0.jar'
+if ($LASTEXITCODE -ne 0) { throw "Maven failed: $LASTEXITCODE" }
+Write-Host 'Ready: target\Music-Reforged-1.0.0.jar'
