@@ -1,5 +1,7 @@
 # Music Reforged — made by hash014
 
+![Music Reforged — Your world. Your soundtrack.](docs/curseforge/media/banner.png)
+
 A rewrite of Zombie_Striker's Music plugin with radios, playlists, jukeboxes,
 custom audio and automatic resource pack generation. Runs on Bukkit/Spigot/Paper servers.
 The JAR requires no other plugin, account or paid service.
@@ -263,5 +265,11 @@ python tools/package_release.py --report docs/admin-link-matrix-results.json
 Local test dependencies, worlds and administration sessions are excluded from
 the archives. User-defined playlist, zone and track names are preserved; the
 plugin's own messages and administration interface are in English.
+
+## CurseForge publication kit
+
+[Ready-to-paste project description](docs/curseforge/CURSEFORGE-PAGE.md),
+[upload guide](docs/curseforge/UPLOAD-GUIDE.md) and
+[logo, banner and real interface screenshots](docs/curseforge/media/) are included.
 
 GPL-2.0-or-later; credits and dependencies are listed in `NOTICE` and `licenses/`.

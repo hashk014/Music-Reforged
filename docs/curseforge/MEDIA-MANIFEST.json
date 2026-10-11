@@ -1,0 +1,42 @@
+{
+  "project": "Music Reforged",
+  "author": "hash014",
+  "assets": [
+    {
+      "file": "media/admin-library.jpg",
+      "width": 1265,
+      "height": 947,
+      "transparent": false,
+      "bytes": 95137,
+      "sha256": "969426ca9e346d4ec77cf98c60f94308f1fc12842fd645abfbc39248e3a08fec",
+      "kind": "real administration screenshot"
+    },
+    {
+      "file": "media/admin-playlists.jpg",
+      "width": 1280,
+      "height": 720,
+      "transparent": false,
+      "bytes": 61202,
+      "sha256": "d626e8d8f51f9be36494471d4a5fc7047afb5dc0945033f6fb5616c4f6f13af4",
+      "kind": "real administration screenshot"
+    },
+    {
+      "file": "media/banner.png",
+      "width": 2172,
+      "height": 724,
+      "transparent": false,
+      "bytes": 1785321,
+      "sha256": "68cdc014b10a75160504744079e5980588e55598291486302a38ba8a2f5901c0",
+      "kind": "generated artwork"
+    },
+    {
+      "file": "media/logo.png",
+      "width": 1254,
+      "height": 1254,
+      "transparent": true,
+      "bytes": 979994,
+      "sha256": "48a7442285695ee86ab43526fedd8530ba6adaf503760003b5320c9ea09b0821",
+      "kind": "generated artwork"
+    }
+  ]
+}
