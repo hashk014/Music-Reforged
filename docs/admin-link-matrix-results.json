@@ -1,0 +1,102 @@
+{
+  "date": "2026-10-11T19:04:53.745647+00:00",
+  "jarSha256": "a7f7a9289e739f0fe0223428fa2035e9ac22cbc82b71ae5db9d9a3603197dff2",
+  "results": [
+    {
+      "version": "1.8.8",
+      "status": "passed",
+      "java": 8,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 0,
+      "packPackets": 1,
+      "adminLinkPackets": 1,
+      "seconds": 2.5,
+      "failures": []
+    },
+    {
+      "version": "1.12.2",
+      "status": "passed",
+      "java": 8,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "adminLinkPackets": 1,
+      "seconds": 3.1,
+      "failures": []
+    },
+    {
+      "version": "1.21.11",
+      "status": "passed",
+      "java": 21,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "adminLinkPackets": 1,
+      "seconds": 9.2,
+      "failures": []
+    },
+    {
+      "version": "26.3",
+      "status": "passed",
+      "java": 25,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "adminLinkPackets": 1,
+      "seconds": 7.8,
+      "failures": []
+    }
+  ]
+}

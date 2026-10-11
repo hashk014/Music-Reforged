@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-11T18:40:29.965069+00:00",
+  "jarSha256": "a9e730369472905a41880af4ae2d4fcd970f56f3d220b4f7eec8bbef50053853",
+  "results": [
+    {
+      "version": "1.8.8",
+      "status": "passed",
+      "java": 8,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 0,
+      "packPackets": 1,
+      "seconds": 2.5,
+      "failures": []
+    },
+    {
+      "version": "1.12.2",
+      "status": "passed",
+      "java": 8,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "seconds": 3.0,
+      "failures": []
+    },
+    {
+      "version": "26.3",
+      "status": "passed",
+      "java": 25,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "seconds": 5.6,
+      "failures": []
+    },
+    {
+      "version": "1.21.11",
+      "status": "passed",
+      "java": 21,
+      "checks": 26,
+      "playerChecks": 24,
+      "restartChecks": 6,
+      "http": true,
+      "admin": {
+        "authenticated": true,
+        "unauthorizedBlocked": true,
+        "playlistOrder": true,
+        "zoneRuleDisc": true,
+        "mp3Imported": true,
+        "oggImported": true,
+        "packGenerated": true
+      },
+      "soundPackets": 13,
+      "stopPackets": 13,
+      "packPackets": 1,
+      "seconds": 7.2,
+      "failures": []
+    }
+  ]
+}

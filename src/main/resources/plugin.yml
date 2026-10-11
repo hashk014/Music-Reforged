@@ -1,0 +1,48 @@
+name: MusicReforged
+main: fr.hash014.music.MusicReforged
+version: 1.0.0
+api-version: '1.13'
+author: hash014
+description: Music Reforged - made by hash014. Radio stations, playlists and custom audio.
+commands:
+  music:
+    aliases: [mr, musicreforged]
+    description: Music Reforged - made by hash014
+    usage: /music help
+permissions:
+  musicreforged.use:
+    default: true
+  musicreforged.create:
+    default: op
+  musicreforged.admin:
+    default: op
+  musicreforged.global:
+    default: op
+  music.admin:
+    default: op
+  music.commands:
+    default: op
+  music.default:
+    default: true
+    children:
+      music.usejukebox: true
+      music.placejukebox: true
+      music.changesong: true
+      music.changevolume: true
+  music.usejukebox:
+    default: true
+  music.placejukebox:
+    default: true
+  music.changesong:
+    default: true
+  music.changevolume:
+    default: true
+  music.changevolumetoglobal:
+    default: op
+  music.*:
+    default: op
+    children:
+      music.admin: true
+      music.commands: true
+      music.default: true
+      music.changevolumetoglobal: true
